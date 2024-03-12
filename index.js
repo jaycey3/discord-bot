@@ -66,25 +66,6 @@ async function getJob(id) {
 	return user ? user.jobs : 0;
 }
 
-async function removeUser(id) {
-  try {
-    const user = await Users.findOne({ where: { user_id: id } });
-
-    if (!user) {
-      console.log(`Gebruiker met ID ${id} niet gevonden.`);
-      return;
-    }
-
-    await user.destroy();
-    currency.delete(id);
-    console.log(`Gebruiker met ID ${id} is succesvol verwijderd uit de database.`);
-  } catch (error) {
-    console.error("Fout bij het verwijderen van de gebruiker:", error);
-  }
-}
-
-removeUser('708005417170632705');
-
 module.exports = { currency, getBalance, addBalance, client, setJob, getJob }
 
 // Command Handler
