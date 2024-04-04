@@ -14,6 +14,11 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: '',
             allowNull: true,
         },
+		workxp: {
+			type: DataTypes.INTEGER,
+			defaultValue: 0,
+			allowNull: false,
+		},
 	}, {
 		timestamps: false,
 	});

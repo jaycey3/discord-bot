@@ -66,7 +66,26 @@ async function getJob(id) {
 	return user ? user.jobs : 0;
 }
 
-module.exports = { currency, getBalance, addBalance, client, setJob, getJob }
+async function addWorkXP(id, amount) {
+	const user = currency.get(id);
+
+	if (user) {
+		user.workxp += Number(amount);
+		return user.save();
+	}
+
+	const newUser = await Users.create({ user_id: id, workxp: amount });
+	currency.set(id, newUser);
+
+	return newUser;
+}
+
+function getWorkXP(id) {
+	const user = currency.get(id);
+	return user ? user.workxp : 0;
+}
+
+module.exports = { currency, getBalance, addBalance, client, setJob, getJob, addWorkXP, getWorkXP };
 
 // Command Handler
 client.cooldowns = new Collection();
@@ -96,7 +115,7 @@ client.on('interactionCreate', async interaction => {
 
   const now = Date.now();
   const timestamps = cooldowns.get(command.data.name);
-  const defaultCooldownDuration = 0;
+  const defaultCooldownDuration = 3;
   const cooldownAmount = (command.cooldown ?? defaultCooldownDuration) * 1000;
 
 	if (timestamps.has(interaction.user.id)) {

@@ -8,7 +8,7 @@ module.exports = {
         option.setName('bet')
         .setDescription('Place your bet for the blackjack game. (Min. 100, Max. 20,000)')
         .setMinValue(100)
-        .setMaxValue(20000)
+        .setMaxValue(100000)
         .setRequired(true)),
   async execute(interaction) {
     const { getBalance, addBalance } = require('../index');

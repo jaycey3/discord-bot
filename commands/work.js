@@ -1,167 +1,34 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-  cooldown: 1,
-  data: new SlashCommandBuilder()
-    .setName('work')
-    .setDescription('Work to get paid!'),
-  async execute(interaction) {
-    const { addBalance, getJob, getBalance } = require('../index');
-    const user = interaction.user;
-    const jobString = await getJob(user.id);
-    const job = convertJobName(jobString);
-    const questions = require('../work/questions');
-    const jobs = require('../work/information');
+	cooldown: 7200,
+	data: new SlashCommandBuilder()
+		.setName('work')
+		.setDescription('Work to get paid!'),
+	async execute(interaction) {
+		const { getJob, getWorkXP, addBalance, addWorkXP } = require('../index');
+		const jobInformation = require('../util/jobs.js');
+		const user = interaction.user;
+		const job = await getJob(user.id);
+		const workxp = await getWorkXP(user.id);
+		const jobData = job ? jobInformation[job][0] : null;
 
-    function convertJobName(job) {
-      if (!jobString) {
-        return '';
-      } else {
-        return job.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
-      }
-  }
 
-    if (!jobString) {
-        return interaction.reply({ content: 'You don\'t have a job! You can use `/apply` to apply for a job and start earning money.', ephemeral: true });
-    }
+		if (!job) {
+			return interaction.reply({ content: 'You don\'t have a job! You can use `/job apply` to apply for a job and start earning money.', ephemeral: true });
+		}
 
-    await interaction.deferReply();
+		const embed = new EmbedBuilder()
+		.setTitle(`${jobData.emoji} ${jobData.name}`)
+		.setColor('#2C2F33')
+		.setDescription(`Thank you for completing your shift, **${user.displayName}**!
 
-    const question = questions[job][Math.floor(Math.random() * questions[job].length)];
-    const answers = [question.correctAnswer, ...question.incorrectAnswers];
-    const salary = jobs[job][0].salary;
-    answers.sort(() => Math.random() - 0.5);
+		Your salary of \`${jobData.salary}\` 🪙 has been added to your balance.
+		You now have \`${workxp + 1}\` 🎖️ work experience.`);
+	
+		addBalance(user.id, jobData.salary);
+		addWorkXP(user.id, 1);
+		interaction.reply({ embeds: [embed] });
 
-    const row = new ActionRowBuilder()
-    .addComponents(
-      new ButtonBuilder()
-      .setCustomId('answer_1')
-      .setLabel(answers[0])
-      .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-      .setCustomId('answer_2')
-      .setLabel(answers[1])
-      .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-      .setCustomId('answer_3')
-      .setLabel(answers[2])
-      .setStyle(ButtonStyle.Secondary),
-
-      new ButtonBuilder()
-      .setCustomId('answer_4')
-      .setLabel(answers[3])
-      .setStyle(ButtonStyle.Secondary)
-    );
-
-    const questionEmbed = new EmbedBuilder()
-    .setAuthor({ name: user.displayName, iconURL: user.avatarURL({ dynamic: true }) })
-    .setTitle(jobs[job][0].name)
-    .setColor('#2C2F33')
-    .setDescription(`**${question.question}**\n\nAnswer the question correctly to earn \`${salary}\` 🪙`)
-    .setFooter({ text: 'You have 30 seconds to answer the question' })
-
-    const questionEmbedCorrect = new EmbedBuilder()
-    .setAuthor({ name: user.displayName, iconURL: user.avatarURL({ dynamic: true }) })
-    .setTitle(jobs[job][0].name)
-    .setColor('#3ba55c')
-    .setDescription(`**${question.question}**\n\nYou answered the question correctly and received your paycheck of \`${salary}\` 🪙`)
-
-    const questionEmbedIncorrect = new EmbedBuilder()
-    .setAuthor({ name: user.displayName, iconURL: user.avatarURL({ dynamic: true }) })
-    .setTitle(jobs[job][0].name)
-    .setColor('#ed4245')
-    .setDescription(`**${question.question}**\n\nYou didn't answer the question correctly. You only received \`${salary / 2}\` 🪙`)
-
-    const questionEmbedTime = new EmbedBuilder()
-    .setAuthor({ name: user.displayName, iconURL: user.avatarURL({ dynamic: true }) })
-    .setTitle(jobs[job][0].name)
-    .setColor('#5865f2')
-    .setDescription(`**${question.question}**\n\nYou didn't answer the question in time. You didn't receive any money.`)
-
-    const work = await interaction.editReply({ embeds: [questionEmbed], components: [row] });
-
-    const collectorFilter = i => i.user.id === user.id;
-
-    const timeRow = new ActionRowBuilder()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId('trivia_1')
-        .setLabel(answers[0])
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true),
-
-      new ButtonBuilder()
-        .setCustomId('trivia_2')
-        .setLabel(answers[1])
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true),
-
-      new ButtonBuilder()
-        .setCustomId('trivia_3')
-        .setLabel(answers[2])
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true),
-
-      new ButtonBuilder()
-        .setCustomId('trivia_4')
-        .setLabel(answers[3])
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(true),
-    );
-
-    try {
-      const answer = await work.awaitMessageComponent({ filter: collectorFilter, time: 30_000 });
-      const correctAnswer = question.correctAnswer;
-      const correctButtonIndex = answers.indexOf(correctAnswer) + 1;
-      const clickedButtonIndex = parseInt(answer.customId.split('_')[1]);
-
-      const newButtons = [
-        new ButtonBuilder()
-          .setCustomId('trivia_1')
-          .setLabel(answers[0])
-          .setStyle(correctButtonIndex === 1 ? ButtonStyle.Success : clickedButtonIndex === 1 ? ButtonStyle.Danger : ButtonStyle.Secondary)
-          .setDisabled(true),
-      
-        new ButtonBuilder()
-          .setCustomId('trivia_2')
-          .setLabel(answers[1])
-          .setStyle(correctButtonIndex === 2 ? ButtonStyle.Success : clickedButtonIndex === 2 ? ButtonStyle.Danger : ButtonStyle.Secondary)
-          .setDisabled(true),
-      
-        new ButtonBuilder()
-          .setCustomId('trivia_3')
-          .setLabel(answers[2])
-          .setStyle(correctButtonIndex === 3 ? ButtonStyle.Success : clickedButtonIndex === 3 ? ButtonStyle.Danger : ButtonStyle.Secondary)
-          .setDisabled(true),
-      
-        new ButtonBuilder()
-          .setCustomId('trivia_4')
-          .setLabel(answers[3])
-          .setStyle(correctButtonIndex === 4 ? ButtonStyle.Success : clickedButtonIndex === 4 ? ButtonStyle.Danger : ButtonStyle.Secondary)
-          .setDisabled(true),
-      ];
-
-      const newRow = new ActionRowBuilder().addComponents(...newButtons);
-
-      if (answer.customId === 'answer_' + correctButtonIndex.toString()) {
-        try {
-          await addBalance(user.id, salary);
-        } catch (error) {
-          console.log(error);
-        }
-        await answer.update({ components: [newRow], embeds: [questionEmbedCorrect] });
-      } else {
-        await addBalance(user.id, salary / 2);
-        await answer.update({ components: [newRow], embeds: [questionEmbedIncorrect] });
-      }
-    } catch (error) {
-      try {
-        await interaction.editReply({ embeds: [questionEmbedTime], components: [timeRow] });
-      } catch (error) {
-        console.log('Error while trying to edit the reply: ', error)
-      }
-    }
-  },
+	},
 };
