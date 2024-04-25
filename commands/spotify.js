@@ -24,7 +24,7 @@ module.exports = {
           { name: 'Artist(s)', value: spotifyActivity.state, inline: true },
           { name: 'Album', value: spotifyActivity.assets.largeText, inline: true },
         )
-        .setFooter({ text: spotifyMember.user.username, iconURL: spotifyMember.user.avatarURL({ dynamic: true }) })
+        .setFooter({ text: spotifyMember.user.displayName, iconURL: spotifyMember.user.avatarURL({ dynamic: true }) })
         .setTimestamp();
 
       await interaction.reply({ embeds: [spotifyEmbed] });

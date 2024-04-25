@@ -1,4 +1,16 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const jobs = require('../util/jobs.js');
+
+function generateJobChoices() {
+    const choices = [];
+    for (const jobId in jobs) {
+        const job = jobs[jobId][0];
+        choices.push({ name: job.name, value: jobId });;
+    }
+    return choices;
+}
+
+const jobChoices = generateJobChoices();
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,9 +24,7 @@ module.exports = {
                     option.setName('job')
                         .setDescription('Which job do you want to apply for?')
                         .setRequired(true)
-                        .addChoices(
-                            { name: 'McDonald\'s worker', value: 'mcdonaldsworker' },
-                        )))
+                        .addChoices(jobChoices)))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('info')
@@ -44,7 +54,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setTitle('🎉 Job Application')
-                .setDescription(`Congratulations, ${user.displayName}! You are now a **${jobData.name}**!`)
+                .setDescription(`Congratulations, **${user.displayName}**! You are now a **${jobData.name}**!`)
                 .setFooter({ text: 'You can use /work to start working!' });
 
             try {
@@ -55,6 +65,7 @@ module.exports = {
                 interaction.reply('There was an error trying to apply for a job.');
             }
         } else if (interaction.options.getSubcommand() === 'info') {
+            console.log(jobChoices)
             const jobData = job ? jobInformation[job][0] : null;
 
             if (!job) {

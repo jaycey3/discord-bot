@@ -25,7 +25,7 @@ module.exports = {
     .first(10);
 
     const embed = new EmbedBuilder()
-    .setTitle('Leaderboard')
+    .setTitle('🏆 Leaderboard')
     .setColor('#2C2F33')
 
     if (users.length > 0) {

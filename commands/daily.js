@@ -7,7 +7,7 @@ module.exports = {
     .setDescription('Claim your daily moneys.'),
   async execute(interaction) {
     const { addBalance } = require('../index');
-    const daily = 250;
+    const daily = 5000;
 
     const embed = new EmbedBuilder()
     .setTitle(`Here is your daily treat ${interaction.user.displayName}!`)

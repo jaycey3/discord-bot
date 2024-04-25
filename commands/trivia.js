@@ -51,7 +51,7 @@ module.exports = {
   async execute(interaction) {
     const axios = require('axios');
     const { addBalance } = require('../index');
-    const reward = 50;
+    const reward = 100;
 
     let category = interaction.options.getString('category');
     let difficulty = interaction.options.getString('difficulty');

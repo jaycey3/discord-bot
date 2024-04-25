@@ -14,7 +14,7 @@ module.exports = {
     const balance = await getBalance(target.id).toLocaleString();
 
     const embed = new EmbedBuilder()
-    .setTitle(`Balance`)
+    .setTitle('💰 Balance')
     .setColor('#2C2F33')
     .setDescription(`**${target.toString()}** currently has \`${balance}\` 🪙`)
     .setThumbnail(target.avatarURL({ dynamic: true }))

@@ -6,7 +6,7 @@ module.exports = {
     .setDescription('Play a game of blackjack.')
     .addIntegerOption(option => 
         option.setName('bet')
-        .setDescription('Place your bet for the blackjack game. (Min. 100, Max. 20,000)')
+        .setDescription('Place your bet for the blackjack game. (Min. 100, Max. 100,000)')
         .setMinValue(100)
         .setMaxValue(100000)
         .setRequired(true)),

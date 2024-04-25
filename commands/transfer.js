@@ -34,9 +34,9 @@ module.exports = {
 	addBalance(target.id, transferAmount);
 
     const embed = new EmbedBuilder()
-    .setTitle(`Transfer`)
+    .setTitle('💸 Transfer')
     .setColor('#2C2F33')
-    .setDescription(`Successfully transferred \`${transferAmount}\` 🪙 to ${target.toString()}.`)
+    .setDescription(`Successfully transferred \`${transferAmount.toLocaleString()}\` 🪙 to ${target.toString()}.`)
     .setThumbnail(target.avatarURL({ dynamic: true }))
 
     return interaction.reply({ embeds: [embed] });
