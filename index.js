@@ -28,7 +28,7 @@ async function connectToDatabase() {
     const connection = await mysql.createConnection({
       host: 'sql.ferox.host',
       user: 'u31751_dkYekRbIwc',
-      password: '	=pUDqn@2a35b8=o9wVRKxjqo',
+      password: '=pUDqn@2a35b8=o9wVRKxjqo',
       database: 's31751_dev'
     });
     console.log('Connected with the database!');

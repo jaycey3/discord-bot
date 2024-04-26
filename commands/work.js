@@ -7,14 +7,14 @@ module.exports = {
 		.setDescription('Work to get paid!'),
 	async execute(interaction) {
 		const { getUser, addBalance, getJob, addWorkXP } = require('../index');
-
 		const user = interaction.user;
 		const { job_id: currentJob, work_xp: currentWorkXP } = await getUser(user.id);
-		const { name: jobName, salary: jobSalary, emoji: jobEmoji } = await getJob(currentJob);
 
 		if (currentJob == 0) {
 			return interaction.reply({ content: '⚠️ **You don\'t have a job! You can use `/job apply` to apply for a job and start earning money.**', ephemeral: true });
 		}
+
+		const { name: jobName, salary: jobSalary, emoji: jobEmoji } = await getJob(currentJob);
 
 		const embed = new EmbedBuilder()
 		.setTitle(`${jobEmoji} ${jobName}`)
@@ -27,6 +27,5 @@ module.exports = {
 		addBalance(user.id, jobSalary);
 		addWorkXP(user.id, 1);
 		interaction.reply({ embeds: [embed] });
-
 	},
 };
