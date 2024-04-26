@@ -235,7 +235,7 @@ module.exports = {
         }
     } catch (error) {
         return console.log('There was an error while fetching the trivia question: ', error),
-        interaction.editReply({ content: 'There was an error while fetching the trivia question. Please try again.', ephemeral: true })
+        interaction.editReply({ content: '⚠️ **There was an error while fetching the trivia question. Please try again.**', ephemeral: true })
     }
   },
 };

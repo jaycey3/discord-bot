@@ -13,21 +13,22 @@ module.exports = {
         .setDescription('The amount you want to transfer to the user.')
         .setRequired(true)),
   async execute(interaction) {
-    const { getBalance, addBalance } = require('../index');
+    const { getUser, addBalance } = require('../index');
+    const user = await getUser(interaction.user.id);
+    const balance = user.balance;
 
-    const currentAmount = getBalance(interaction.user.id);
 	const transferAmount = interaction.options.getInteger('amount');
 	const target = interaction.options.getUser('user');
 
     if (target.id === interaction.user.id) {
-        return interaction.reply({ content: `Sorry, but you can not transfer 🪙 to yourself.`, ephemeral: true });
+        return interaction.reply({ content: `⚠️ **Sorry, but you can not transfer 🪙 to yourself.**`, ephemeral: true });
     }
 
-	if (transferAmount > currentAmount) {
-        return interaction.reply({ content: `Sorry, but you only have \`${currentAmount}\` 🪙.`, ephemeral: true });
+	if (transferAmount > balance) {
+        return interaction.reply({ content: `⚠️ **Sorry, but you only have \`${balance}\` 🪙.**`, ephemeral: true });
     }
 	if (transferAmount <= 0) {
-        return interaction.reply({ content: `Please enter an amount greater than \`0\` 🪙.`, ephemeral: true });
+        return interaction.reply({ content: `⚠️ **Please enter an amount greater than \`0\` 🪙.**`, ephemeral: true });
     }
 
     addBalance(interaction.user.id, -transferAmount);

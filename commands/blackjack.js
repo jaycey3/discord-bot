@@ -11,17 +11,19 @@ module.exports = {
         .setMaxValue(100000)
         .setRequired(true)),
   async execute(interaction) {
-    const { getBalance, addBalance } = require('../index');
-    const balance = getBalance(interaction.user.id);
+    const { addBalance, getUser } = require('../index');
+    const user_id = interaction.user.id;
+    const user = await getUser(user_id);
+    const balance = user.balance;
 	const bet = interaction.options.getInteger('bet');
     const betTxt = bet.toLocaleString();
 
 	if (bet > balance) {
-        return interaction.reply({ content: `Sorry, but you only have \`${balance}\` 🪙.`, ephemeral: true });
+        return interaction.reply({ content: `⚠️ **Sorry, but you only have \`${balance}\` 🪙.**`, ephemeral: true });
     }
 
     // Withdraw the bet from the player's balance
-    addBalance(interaction.user.id, -bet)
+    addBalance(user_id, -bet)
 
     // Deck of cards
     const deck = [
@@ -155,7 +157,7 @@ module.exports = {
             )
             .setFooter({ text: `Placed bets: ${betTxt} 🪙`})
 
-            addBalance(interaction.user.id, bet)
+            addBalance(user_id, bet)
             return decisionMessage.edit({ content: `**😥 Oh no!** It's a tie with blackjack.\nAdded back your bet of \`${betTxt}\` 🪙 to your balance.`, embeds: [dealerEmbed], components: [] })
         } else {
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -176,7 +178,7 @@ module.exports = {
             )
             .setFooter({ text: `Placed bets: ${betTxt} 🪙`})
 
-            addBalance(interaction.user.id, bjPay);
+            addBalance(user_id, bjPay);
             return decisionMessage.edit({ content: `**👑 BLACKJACK!** Congratulations, you've won with blackjack!\nAdded \`${bjPayout}\` 🪙 to your balance.`, embeds: [bjEmbed] });
         }
     }
@@ -185,7 +187,7 @@ module.exports = {
         await decisionMessage.edit({ components: [row] })
 
         try {
-            const collectorFilter = i => i.user.id === interaction.user.id;
+            const collectorFilter = i => i.user.id === user_id;
 
             while (handValue(playerHand) < 21) {
                 const decision = await decisionMessage.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
@@ -266,12 +268,12 @@ module.exports = {
         if (playerValue > 21) {
             decisionMessage.edit({ content: `😢 **You lost!** You've gone bust, the dealer wins.\nRemoved \`${betTxt}\` 🪙 from your balance.`})
         } else if (dealerValue > 21 || playerValue > dealerValue) {
-            addBalance(interaction.user.id, reward)
+            addBalance(user_id, reward)
             decisionMessage.edit({ content: `🎉 **You won!**\nAdded \`${reward.toLocaleString()}\` 🪙 to your balance.`})
         } else if (playerValue < dealerValue) {
             decisionMessage.edit({ content: `😢 **You lost!** The dealer wins.\nRemoved \`${betTxt}\` 🪙 from your balance.`})
         } else {
-            addBalance(interaction.user.id, bet)
+            addBalance(user_id, bet)
             decisionMessage.edit({ content: `⚖️ **It's a tie!**\nAdded back your bet of \`${betTxt}\` 🪙 to your balance.`})
         }
   },

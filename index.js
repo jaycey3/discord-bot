@@ -2,7 +2,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
 const { token } = require('./config.json');
-const { Users } = require('./dbObjects');
 
 const client = new Client({
   intents: [
@@ -21,71 +20,156 @@ const client = new Client({
   ],
 });
 
-// Economy
-const currency = new Collection();
+//Database
+const mysql = require('mysql2/promise');
 
-async function addBalance(id, amount) {
-	const user = currency.get(id);
-
-	if (user) {
-		user.balance += Number(amount);
-		return user.save();
-	}
-
-	const newUser = await Users.create({ user_id: id, balance: amount });
-	currency.set(id, newUser);
-
-	return newUser;
-}
-
-function getBalance(id) {
-	const user = currency.get(id);
-	return user ? user.balance : 0;
-}
-
-async function setJob(id, job) {
+async function connectToDatabase() {
   try {
-    let user = await Users.findOne({ where: { user_id: id } });
-
-    if (!user) {
-      user = await Users.create({ user_id: id, jobs: job });
-      currency.set(id, user);
-    } else {
-      user.jobs = job;
-      await user.save();
-    }
-    
-    return user;
-  } catch (error) {
-    console.log("Error: ", error);
+    const connection = await mysql.createConnection({
+      host: 'sql.ferox.host',
+      user: 'u31751_dkYekRbIwc',
+      password: '	=pUDqn@2a35b8=o9wVRKxjqo',
+      database: 's31751_dev'
+    });
+    console.log('Connected with the database!');
+    return connection;
+  } catch (err) {
+    console.error('Error while trying to connect to database', err);
+    throw err;
   }
 }
 
-async function getJob(id) {
-	const user = await Users.findOne({ where: { user_id: id } });
-	return user ? user.jobs : 0;
-}
+(async () => {
+  const connection = await connectToDatabase();
 
-async function addWorkXP(id, amount) {
-	const user = currency.get(id);
+  async function createUser(user_id) {
+    const newUser = {
+      user_id: user_id,
+      balance: 0,
+      job_id: 0,
+      work_xp: 0
+    };
+  
+    try {
+      const result = await connection.execute(`INSERT INTO users (user_id, balance, job_id, work_xp) VALUES (?, ?, ?, ?)`, [newUser.user_id, newUser.balance, newUser.job_id, newUser.work_xp]);
+      console.log('Added a new user', result);
+    } catch (err) {
+      console.error('Error while trying to add user:', err);
+    }
+  }
+  
+  async function getUser(user_id) {
+    try {
+      const [rows] = await connection.execute('SELECT * FROM users WHERE user_id = ?', [user_id]);
+      if (rows && rows.length > 0) {
+        return rows[0];
+      } else {
+        console.log('User not found, creating a new one');
+        await createUser(user_id);
+        // Return a default user object with default values
+        return {
+          user_id: user_id,
+          balance: 0,
+          job_id: 0,
+          work_xp: 0
+        };
+      }
+    } catch (err) {
+      console.error('Error while trying to fetch user:', err);
+      throw err;
+    }
+  }
 
-	if (user) {
-		user.workxp += Number(amount);
-		return user.save();
-	}
+  async function getJob(job_id) {
+    try {
+      const [rows] = await connection.execute('SELECT * FROM jobs WHERE id = ?', [job_id]);
+      if (rows && rows.length > 0) {
+        return rows[0];
+      } else {
+        console.log('Job not found.');
+        return;
+      }
+    } catch (err) {
+      console.error('Error while trying to fetch job:', err);
+      throw err;
+    }
+  }
+  
+  async function addBalance(user_id, amount) {
+    try {
+      const user = await getUser(user_id);
+      if (user) {
+        const updatedBalance = user.balance + amount;
+        connection.execute('UPDATE users SET balance = ? WHERE user_id = ?', [updatedBalance, user_id]);
+        console.log('Balance updated for user', user_id);
+      }
+    } catch (err) {
+      console.error('Error while trying to update balance:', err);
+      throw err;
+    }
+  }
+  
+  async function addWorkXP(user_id, amount) {
+    try {
+      const user = await getUser(user_id);
+      if (user) {
+        const updatedWorkXP = user.work_xp + amount;
+        connection.execute('UPDATE users SET work_xp = ? WHERE user_id = ?', [updatedWorkXP, user_id]);
+        console.log('Work XP updated for user', user_id);
+      }
+    } catch (err) {
+      console.error('Error while trying to update work XP:', err);
+      throw err;
+    }
+  }
+  
+  async function setJob(user_id, job_id) {
+    try {
+      const user = await getUser(user_id);
+      if (user) {
+        connection.execute('UPDATE users SET job_id = ? WHERE user_id = ?', [job_id, user_id]);
+        console.log('Job updated for user', user_id);
+      }
+    } catch (err) {
+      console.error('Error while trying to update job:', err);
+      throw err;
+    }
+  }
+  
+  async function getAllJobs() {
+    try {
+      const [rows] = await connection.execute('SELECT * FROM jobs');
 
-	const newUser = await Users.create({ user_id: id, workxp: amount });
-	currency.set(id, newUser);
+      return rows;
+    } catch (err) {
+      console.error('Error while trying to fetch jobs:', err);
+      throw err;
+    }
+  }
 
-	return newUser;
-}
+  async function getTopUsers(limit) {
+    try {
+      const query = `SELECT user_id, balance FROM users ORDER BY balance DESC LIMIT ?`;
+      const [rows] = await connection.execute(query, [limit]);
+  
+      return rows;
+    } catch (error) {
+      console.error('Error fetching top users:', error);
+      throw error;
+    }
+  }
 
-function getWorkXP(id) {
-	const user = currency.get(id);
-	return user ? user.workxp : 0;
-}
-
-module.exports = { currency, getBalance, addBalance, client, setJob, getJob, addWorkXP, getWorkXP };
+  module.exports = {
+    addBalance,
+    addWorkXP,
+    setJob,
+    getUser,
+    getJob,
+    getAllJobs,
+    getTopUsers,
+    client
+  };
+})();
 
 // Command Handler
 client.cooldowns = new Collection();
@@ -118,24 +202,24 @@ client.on('interactionCreate', async interaction => {
   const defaultCooldownDuration = 3;
   const cooldownAmount = (command.cooldown ?? defaultCooldownDuration) * 1000;
 
-	if (timestamps.has(interaction.user.id)) {
-		const expirationTime = timestamps.get(interaction.user.id) + cooldownAmount;
+  if (timestamps.has(interaction.user.id)) {
+    const expirationTime = timestamps.get(interaction.user.id) + cooldownAmount;
 
-		if (now < expirationTime) {
-			const expiredTimestamp = Math.round(expirationTime / 1000);
-			return interaction.reply({ content: `Please wait, you are on a cooldown for \`/${command.data.name}\`. You can use it again <t:${expiredTimestamp}:R>.`, ephemeral: true });
-		}
-	}
+    if (now < expirationTime) {
+      const expiredTimestamp = Math.round(expirationTime / 1000);
+      return interaction.reply({ content: `⏰ **Please wait, you are on a cooldown for \`/${command.data.name}\`. You can use it again <t:${expiredTimestamp}:R>.**`, ephemeral: true });
+    }
+  }
 
-	timestamps.set(interaction.user.id, now);
-	setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
+  timestamps.set(interaction.user.id, now);
+  setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
   try {
     await command.execute(interaction);
   }
   catch (error) {
     console.error(error);
-    await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+    await interaction.reply({ content: '❗ **There was an error while executing this command!**', ephemeral: true });
   }
 });
 

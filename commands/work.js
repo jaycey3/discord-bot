@@ -6,27 +6,25 @@ module.exports = {
 		.setName('work')
 		.setDescription('Work to get paid!'),
 	async execute(interaction) {
-		const { getJob, getWorkXP, addBalance, addWorkXP } = require('../index');
-		const jobInformation = require('../util/jobs.js');
+		const { getUser, addBalance, getJob, addWorkXP } = require('../index');
+
 		const user = interaction.user;
-		const job = await getJob(user.id);
-		const workxp = await getWorkXP(user.id);
-		const jobData = job ? jobInformation[job][0] : null;
+		const { job_id: currentJob, work_xp: currentWorkXP } = await getUser(user.id);
+		const { name: jobName, salary: jobSalary, xp: jobXP, emoji: jobEmoji } = await getJob(currentJob);
 
-
-		if (!job) {
-			return interaction.reply({ content: 'You don\'t have a job! You can use `/job apply` to apply for a job and start earning money.', ephemeral: true });
+		if (currentJob == 0) {
+			return interaction.reply({ content: '⚠️ **You don\'t have a job! You can use `/job apply` to apply for a job and start earning money.**', ephemeral: true });
 		}
 
 		const embed = new EmbedBuilder()
-		.setTitle(`${jobData.emoji} ${jobData.name}`)
+		.setTitle(`${jobEmoji} ${jobName}`)
 		.setColor('#2C2F33')
 		.setDescription(`Thank you for completing your shift, **${user.displayName}**!
 
-		Your salary of \`${jobData.salary}\` 🪙 has been added to your balance.
-		You now have \`${workxp + 1}\` 🎖️ work experience.`);
+		Your salary of \`${jobSalary}\` 🪙 has been added to your balance.
+		You now have \`${currentWorkXP + 1}\` 🎖️ work experience.`);
 	
-		addBalance(user.id, jobData.salary);
+		addBalance(user.id, jobSalary);
 		addWorkXP(user.id, 1);
 		interaction.reply({ embeds: [embed] });
 

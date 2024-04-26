@@ -1,16 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const jobs = require('../util/jobs.js');
-
-function generateJobChoices() {
-    const choices = [];
-    for (const jobId in jobs) {
-        const job = jobs[jobId][0];
-        choices.push({ name: job.name, value: jobId });;
-    }
-    return choices;
-}
-
-const jobChoices = generateJobChoices();
+const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,12 +7,7 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('apply')
-                .setDescription('Apply for a job.')
-                .addStringOption(option =>
-                    option.setName('job')
-                        .setDescription('Which job do you want to apply for?')
-                        .setRequired(true)
-                        .addChoices(jobChoices)))
+                .setDescription('Apply for a job.'))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('info')
@@ -34,67 +17,99 @@ module.exports = {
                 .setName('quit')
                 .setDescription('Quit your current job.')),
     async execute(interaction) {
-        const { setJob, getJob, getWorkXP } = require('../index');
-        const jobInformation = require('../util/jobs.js');
+        const { setJob, getUser, getJob, getAllJobs } = require('../index');
         const user = interaction.user;
-        const job = await getJob(user.id);
-        const workxp = await getWorkXP(user.id);
+        const { job_id: currentJob, work_xp: currentWorkXP } = await getUser(user.id);
 
         if (interaction.options.getSubcommand() === 'apply') {
-            const jobOption = interaction.options.getString('job');
-            const jobData = jobOption ? jobInformation[jobOption][0] : null;
-
-            if (job) {
-                return interaction.reply({ content: 'You already have a job! If you want to switch jobs, use `/job quit` to quit your current job.', ephemeral: true });
+            if (!currentJob == 0) {
+                return interaction.reply({ content: '⚠️ **You already have a job! If you want to switch jobs, use `/job quit` to quit your current job.**', ephemeral: true });
             }
 
-            if (jobData.xp > workxp) {
-                return interaction.reply({ content: `You need at least \`${jobData.xp}\` 🎖️ work experience to apply for this job. You currently have \`${workxp}\` 🎖️ work experience.`, ephemeral: true });
+            await interaction.deferReply();
+            const jobs = await getAllJobs();
+
+            const select = new StringSelectMenuBuilder()
+			.setCustomId('select')
+			.setPlaceholder('Please select a job.');
+
+            for (let job of jobs) {
+                const { name: jobName, salary: jobSalary, xp: jobXP, emoji: jobEmoji, id: jobId } = await getJob(job.id);
+                select.addOptions(
+                    new StringSelectMenuOptionBuilder()
+					.setLabel(`${jobEmoji} ${jobName}`)
+					.setDescription(`${jobSalary} 🪙 | ${jobXP} 🎖️`)
+					.setValue(jobId.toString()),
+                );
             }
 
-            const embed = new EmbedBuilder()
+            const row = new ActionRowBuilder()
+	        .addComponents(select);
+
+            const applyEmbed = new EmbedBuilder()
+            .setTitle('📑 Available Jobs')
+            .setDescription(`This is a list of all available jobs. Please select the job you would like to apply for using the select menu under this message.\n\nYou have \`3 minutes\` to select a job.`);
+
+            const jobList = await interaction.editReply({ embeds: [applyEmbed], components: [row] });
+            
+            const collectorFilter = i => i.user.id === user.id;
+            
+            try {
+                const selection = await jobList.awaitMessageComponent({ filter: collectorFilter, time: 180_000 });
+                const job = selection.values[0];
+
+                const { name: jobName, salary: jobSalary, xp: jobXP, emoji: jobEmoji } = await getJob(job);
+
+                if (jobXP > currentWorkXP) {
+                    interaction.deleteReply();
+                    return selection.reply({ content: `⚠️ **You need at least \`${jobXP}\` 🎖️ work experience to apply for this job. You currently have \`${currentWorkXP}\` 🎖️ work experience.**`, ephemeral: true, });
+                }
+
+                const appliedEmbed = new EmbedBuilder()
                 .setTitle('🎉 Job Application')
-                .setDescription(`Congratulations, **${user.displayName}**! You are now a **${jobData.name}**!`)
+                .setDescription(`Congratulations, **${user.displayName}**! You are now working as a **${jobEmoji} ${jobName}**!`)
                 .setFooter({ text: 'You can use /work to start working!' });
 
-            try {
-                await setJob(user.id, jobOption);
-                await interaction.reply({ embeds: [embed] });
-            } catch (error) {
-                console.log("Error: ", error);
-                interaction.reply('There was an error trying to apply for a job.');
+                try {
+                    await setJob(user.id, job);
+                    await selection.update({ embeds: [appliedEmbed], components: [] });
+                } catch (error) {
+                    console.log("Error: ", error);
+                    interaction.reply('⚠️ **There was an error trying to apply for a job.**');
+                }
+            } catch (e) {
+                await interaction.editReply({ content: '⏰ **No job was selected within 3 minutes.**', components: [], embeds: [] });
             }
         } else if (interaction.options.getSubcommand() === 'info') {
-            console.log(jobChoices)
-            const jobData = job ? jobInformation[job][0] : null;
-
-            if (!job) {
-                return interaction.reply({ content: 'You don\'t have a job! You can use `/job apply` to apply for a job and start earning money.', ephemeral: true });
+            if (currentJob == 0) {
+                return interaction.reply({ content: '⚠️ **You don\'t have a job! You can use `/job apply` to apply for a job and start earning money.**', ephemeral: true });
             }
+
+            const { name: jobName, salary: jobSalary, emoji: jobEmoji } = await getJob(currentJob);
 
             const embed = new EmbedBuilder()
                 .setTitle(`👷 Job Information`)
-                .setDescription(`You are currently working as a **${jobData.name}**.`)
+                .setDescription(`You are currently working as a **${jobEmoji} ${jobName}**.`)
                 .addFields(
-                    { name: 'Salary', value: `\`${jobData.salary}\` 🪙`, inline: true },
-                    { name: 'Work Experience', value: `\`${workxp}\` 🎖️`, inline: true }
+                    { name: 'Salary', value: `\`${jobSalary}\` 🪙`, inline: true },
+                    { name: 'Work Experience', value: `\`${currentWorkXP}\` 🎖️`, inline: true }
                 );
 
             interaction.reply({ embeds: [embed] });
 
         } else if (interaction.options.getSubcommand() === 'quit') {
-            const jobData = job ? jobInformation[job][0] : null;
-
-            if (!job) {
-                return interaction.reply({ content: 'You don\'t have a job! You can use `/job apply` to apply for a job and start earning money.', ephemeral: true });
+            if (currentJob == 0) {
+                return interaction.reply({ content: '⚠️ **You don\'t have a job! You can use `/job apply` to apply for a job and start earning money.**', ephemeral: true });
             }
+
+            const { name: jobName, emoji: jobEmoji } = await getJob(currentJob);
 
             const embed = new EmbedBuilder()
                 .setTitle('😢 We are sorry to see you go')
-                .setDescription(`We hope you enjoyed your time as a **${jobData.name}**.`);
+                .setDescription(`We hope you enjoyed your time as a **${jobEmoji} ${jobName}**.`);
 
             try {
-                await setJob(user.id, "");
+                await setJob(user.id, 0);
                 await interaction.reply({ embeds: [embed] });
             } catch (error) {
                 console.log("Error: ", error);

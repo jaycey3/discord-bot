@@ -1,11 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder, codeBlock, Embed } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Shows the richest users.'),
   async execute(interaction) {
-    const { currency, client } = require('../index');
+    const { getTopUsers, client } = require('../index');
 
     const positionEmoji = {
         1: '1️⃣',
@@ -20,20 +20,26 @@ module.exports = {
         10: '🔟'
     };
 
-    const users = currency.sort((a, b) => b.balance - a.balance)
-    .filter(user => client.users.cache.has(user.user_id))
-    .first(10);
+    const users = await getTopUsers(10);
 
     const embed = new EmbedBuilder()
     .setTitle('🏆 Leaderboard')
     .setColor('#2C2F33')
 
+    let description = '';
+    let position = 1;
     if (users.length > 0) {
-      const description = users.map((user, position) => `${positionEmoji[position + 1]} **${(client.users.cache.get(user.user_id).displayName)}** \`${user.balance.toLocaleString()}\` 🪙`).join('\n');
-      embed.setDescription(description);
+      for (let user of users) {
+        let displayName = client.users.cache.get(user.user_id).displayName;
+  
+        description += `${positionEmoji[position]} **${displayName}** \`${user.balance.toLocaleString()}\` 🪙\n`;
+        position ++;
+      }
     } else {
-      embed.setDescription('❌ No users found to display on the leaderboard.');
+      description = '❌ No users found to display on the leaderboard.';
     }
+
+    embed.setDescription(description);
 
     interaction.reply({ embeds: [embed] });
   },

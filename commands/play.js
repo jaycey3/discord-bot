@@ -18,7 +18,7 @@ module.exports = {
     const keywords = interaction.options.getString('song');
 
     if (!interaction.member.voice.channel) {
-      interaction.reply({ content: '⚠️ You have to be in a voice channel to use this command.', ephemeral: true })
+      interaction.reply({ content: '⚠️ **You have to be in a voice channel to use this command.**', ephemeral: true })
       return;
     }
 
