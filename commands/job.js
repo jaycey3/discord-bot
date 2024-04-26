@@ -38,7 +38,7 @@ module.exports = {
                 select.addOptions(
                     new StringSelectMenuOptionBuilder()
 					.setLabel(`${jobEmoji} ${jobName}`)
-					.setDescription(`${jobSalary} 🪙 | ${jobXP} 🎖️`)
+					.setDescription(`${jobSalary.toLocaleString()} 🪙 | ${jobXP} 🎖️`)
 					.setValue(jobId.toString()),
                 );
             }
@@ -58,7 +58,7 @@ module.exports = {
                 const selection = await jobList.awaitMessageComponent({ filter: collectorFilter, time: 180_000 });
                 const job = selection.values[0];
 
-                const { name: jobName, salary: jobSalary, xp: jobXP, emoji: jobEmoji } = await getJob(job);
+                const { name: jobName, xp: jobXP, emoji: jobEmoji } = await getJob(job);
 
                 if (jobXP > currentWorkXP) {
                     interaction.deleteReply();
@@ -91,7 +91,7 @@ module.exports = {
                 .setTitle(`👷 Job Information`)
                 .setDescription(`You are currently working as a **${jobEmoji} ${jobName}**.`)
                 .addFields(
-                    { name: 'Salary', value: `\`${jobSalary}\` 🪙`, inline: true },
+                    { name: 'Salary', value: `\`${jobSalary.toLocaleString()}\` 🪙`, inline: true },
                     { name: 'Work Experience', value: `\`${currentWorkXP}\` 🎖️`, inline: true }
                 );
 

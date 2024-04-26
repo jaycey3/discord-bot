@@ -25,7 +25,7 @@ module.exports = {
     }
 
 	if (transferAmount > balance) {
-        return interaction.reply({ content: `⚠️ **Sorry, but you only have \`${balance}\` 🪙.**`, ephemeral: true });
+        return interaction.reply({ content: `⚠️ **Sorry, but you only have \`${balance.toLocaleString()}\` 🪙.**`, ephemeral: true });
     }
 	if (transferAmount <= 0) {
         return interaction.reply({ content: `⚠️ **Please enter an amount greater than \`0\` 🪙.**`, ephemeral: true });

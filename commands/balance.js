@@ -17,7 +17,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle('💰 Balance')
         .setColor('#2C2F33')
-        .setDescription(`**${target.toString()}** currently has \`${balance}\` 🪙`)
+        .setDescription(`**${target.toString()}** currently has \`${balance.toLocaleString()}\` 🪙`)
         .setThumbnail(target.avatarURL({ dynamic: true }))
 
       return interaction.reply({ embeds: [embed] });
