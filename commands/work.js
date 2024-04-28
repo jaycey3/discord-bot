@@ -31,7 +31,7 @@ module.exports = {
 			100: 2500,
 		};
 
-		if (lastWorkDate && now - lastWorkDate >= 30000) {
+		if (lastWorkDate && now - lastWorkDate >= 86400000) {
             await resetWorkStreak(user.id);
 			streak = 0;
         }
