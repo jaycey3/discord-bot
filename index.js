@@ -71,7 +71,9 @@ async function connectToDatabase() {
           user_id: user_id,
           balance: 0,
           job_id: 0,
-          work_xp: 0
+          work_xp: 0,
+          work_streak: 0,
+          last_work_date: 0
         };
       }
     } catch (err) {
@@ -122,6 +124,20 @@ async function connectToDatabase() {
       throw err;
     }
   }
+
+  async function addWorkStreak(user_id, amount) {
+    try {
+      const user = await getUser(user_id);
+      if (user) {
+        const updatedStreak = user.work_streak + amount;
+        connection.execute('UPDATE users SET work_streak = ? WHERE user_id = ?', [updatedStreak, user_id]);
+        console.log('Work Streak updated for user', user_id);
+      }
+    } catch (err) {
+      console.error('Error while trying to update work streak:', err);
+      throw err;
+    }
+  }
   
   async function setJob(user_id, job_id) {
     try {
@@ -132,6 +148,32 @@ async function connectToDatabase() {
       }
     } catch (err) {
       console.error('Error while trying to update job:', err);
+      throw err;
+    }
+  }
+
+  async function resetWorkStreak(user_id) {
+    try {
+      const user = await getUser(user_id);
+      if (user) {
+        connection.execute('UPDATE users SET work_streak = DEFAULT WHERE user_id = ?', [ user_id]);
+        console.log('Work streak reset.', user_id);
+      }
+    } catch (err) {
+      console.error('Error while trying to reset work streak:', err);
+      throw err;
+    }
+  }
+
+  async function setLastWorkTime(user_id, lastWorkTime) {
+    try {
+      const user = await getUser(user_id);
+      if (user) {
+        connection.execute('UPDATE users SET last_work_date = ? WHERE user_id = ?', [lastWorkTime, user_id]);
+        console.log('Last work time updated for user', user_id);
+      }
+    } catch (err) {
+      console.error('Error while trying to update last work time:', err);
       throw err;
     }
   }
@@ -162,7 +204,10 @@ async function connectToDatabase() {
   module.exports = {
     addBalance,
     addWorkXP,
+    addWorkStreak,
     setJob,
+    resetWorkStreak,
+    setLastWorkTime,
     getUser,
     getJob,
     getAllJobs,
