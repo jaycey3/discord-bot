@@ -43,7 +43,7 @@ module.exports = {
 
 		Your salary of \`${jobSalary.toLocaleString()}\` 🪙 has been added to your balance.
 		You now have \`${currentWorkXP + 1}\` 🎖️ work experience.
-		You now have work streak of \`${streak + 1}\` 🔥`);
+		You now have a work streak of \`${streak + 1}\` 🔥`);
 
 		if (streak >= 9) {
 			let bonusLevel = Math.floor((streak + 1) / 10) * 10;

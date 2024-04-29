@@ -19,7 +19,7 @@ module.exports = {
     async execute(interaction) {
         const { setJob, getUser, getJob, getAllJobs } = require('../index');
         const user = interaction.user;
-        const { job_id: currentJob, work_xp: currentWorkXP } = await getUser(user.id);
+        const { job_id: currentJob, work_xp: currentWorkXP, work_streak: streak } = await getUser(user.id);
 
         if (interaction.options.getSubcommand() === 'apply') {
             if (!currentJob == 0) {
@@ -92,7 +92,8 @@ module.exports = {
                 .setDescription(`You are currently working as a **${jobEmoji} ${jobName}**.`)
                 .addFields(
                     { name: 'Salary', value: `\`${jobSalary.toLocaleString()}\` 🪙`, inline: true },
-                    { name: 'Work Experience', value: `\`${currentWorkXP}\` 🎖️`, inline: true }
+                    { name: 'Work Experience', value: `\`${currentWorkXP}\` 🎖️`, inline: true },
+                    { name: 'Work Streak', value: `\`${streak}\` 🔥`, inline: true }
                 );
 
             interaction.reply({ embeds: [embed] });
