@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
-const { token } = require('./config.json');
+const { token, host, user, password, database } = require('./config.json');
 
 const client = new Client({
   intents: [
@@ -26,10 +26,10 @@ const mysql = require('mysql2/promise');
 async function connectToDatabase() {
   try {
     const connection = await mysql.createConnection({
-      host: 'sql.ferox.host',
-      user: 'u31751_dkYekRbIwc',
-      password: '=pUDqn@2a35b8=o9wVRKxjqo',
-      database: 's31751_dev'
+      host: host,
+      user: user,
+      password: password,
+      database: database
     });
     console.log('Connected with the database!');
     return connection;
@@ -49,7 +49,7 @@ async function connectToDatabase() {
       job_id: 0,
       work_xp: 0
     };
-  
+
     try {
       const result = await connection.execute(`INSERT INTO users (user_id, balance, job_id, work_xp) VALUES (?, ?, ?, ?)`, [newUser.user_id, newUser.balance, newUser.job_id, newUser.work_xp]);
       console.log('Added a new user', result);
@@ -57,7 +57,7 @@ async function connectToDatabase() {
       console.error('Error while trying to add user:', err);
     }
   }
-  
+
   async function getUser(user_id) {
     try {
       const [rows] = await connection.execute('SELECT * FROM users WHERE user_id = ?', [user_id]);
@@ -126,7 +126,7 @@ async function connectToDatabase() {
       throw err;
     }
   }
-  
+
   async function addBalance(user_id, amount) {
     try {
       const user = await getUser(user_id);
@@ -144,7 +144,7 @@ async function connectToDatabase() {
   async function addItem(user_id, item_id, amount) {
     try {
       const item = await getUserItem(user_id, item_id);
-      if (!item) { 
+      if (!item) {
         connection.execute('INSERT INTO inventory (user_id, item_id, amount) VALUES (?, ?, ?)', [user_id, item_id, amount]);
         console.log('Item added to inventory for user', user_id);
       } else {
@@ -163,7 +163,7 @@ async function connectToDatabase() {
       throw err;
     }
   }
-  
+
   async function addWorkXP(user_id, amount) {
     try {
       const user = await getUser(user_id);
@@ -191,7 +191,7 @@ async function connectToDatabase() {
       throw err;
     }
   }
-  
+
   async function setJob(user_id, job_id) {
     try {
       const user = await getUser(user_id);
@@ -209,7 +209,7 @@ async function connectToDatabase() {
     try {
       const user = await getUser(user_id);
       if (user) {
-        connection.execute('UPDATE users SET work_streak = DEFAULT WHERE user_id = ?', [ user_id]);
+        connection.execute('UPDATE users SET work_streak = DEFAULT WHERE user_id = ?', [user_id]);
         console.log('Work streak reset.', user_id);
       }
     } catch (err) {
@@ -230,7 +230,7 @@ async function connectToDatabase() {
       throw err;
     }
   }
-  
+
   async function getAllJobs() {
     try {
       const [rows] = await connection.execute('SELECT * FROM jobs');
@@ -257,7 +257,7 @@ async function connectToDatabase() {
     try {
       const query = `SELECT user_id, balance FROM users ORDER BY balance DESC LIMIT ?`;
       const [rows] = await connection.execute(query, [limit]);
-  
+
       return rows;
     } catch (error) {
       console.error('Error fetching top users:', error);

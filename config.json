@@ -1,4 +1,8 @@
 {
     "clientId": "1026503465448513656",
-    "token": "MTAyNjUwMzQ2NTQ0ODUxMzY1Ng.GP9ev4.PLn7kRLf2yUQSK9QDOpPKooPWwWJWICD8kLn98"
+    "token": "MTAyNjUwMzQ2NTQ0ODUxMzY1Ng.GP9ev4.PLn7kRLf2yUQSK9QDOpPKooPWwWJWICD8kLn98",
+    "host": "sql.ferox.host",
+    "user": "u31751_dkYekRbIwc",
+    "password": "=pUDqn@2a35b8=o9wVRKxjqo",
+    "database": "s31751_dev"
 }
