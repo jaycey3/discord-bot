@@ -96,6 +96,36 @@ async function connectToDatabase() {
       throw err;
     }
   }
+
+  async function getItem(item_id) {
+    try {
+      const [rows] = await connection.execute('SELECT * FROM items WHERE id = ?', [item_id]);
+      if (rows && rows.length > 0) {
+        return rows[0];
+      } else {
+        console.log('Item not found.');
+        return;
+      }
+    } catch (err) {
+      console.error('Error while trying to fetch item:', err);
+      throw err;
+    }
+  }
+
+  async function getUserItem(user_id, item_id) {
+    try {
+      const [rows] = await connection.execute('SELECT * FROM inventory WHERE user_id = ? AND item_id = ?', [user_id, item_id]);
+      if (rows && rows.length > 0) {
+        return rows[0];
+      } else {
+        console.log('User item not found.');
+        return;
+      }
+    } catch (err) {
+      console.error('Error while trying to fetch user item:', err);
+      throw err;
+    }
+  }
   
   async function addBalance(user_id, amount) {
     try {
@@ -104,6 +134,29 @@ async function connectToDatabase() {
         const updatedBalance = user.balance + amount;
         connection.execute('UPDATE users SET balance = ? WHERE user_id = ?', [updatedBalance, user_id]);
         console.log('Balance updated for user', user_id);
+      }
+    } catch (err) {
+      console.error('Error while trying to update balance:', err);
+      throw err;
+    }
+  }
+
+  async function addItem(user_id, item_id, amount) {
+    try {
+      const item = await getUserItem(user_id, item_id);
+      if (!item) { 
+        connection.execute('INSERT INTO inventory (user_id, item_id, amount) VALUES (?, ?, ?)', [user_id, item_id, amount]);
+        console.log('Item added to inventory for user', user_id);
+      } else {
+        const updatedAmount = item.amount + amount;
+        if (updatedAmount <= 0) {
+          // Verwijder de rij uit de database als de hoeveelheid nul of negatief is
+          connection.execute('DELETE FROM inventory WHERE user_id = ? AND item_id = ?', [user_id, item_id]);
+          console.log('Item removed from inventory for user', user_id);
+        } else {
+          connection.execute('UPDATE inventory SET amount = ? WHERE user_id = ? AND item_id = ?', [updatedAmount, user_id, item_id]);
+          console.log('Inventory updated for user', user_id);
+        }
       }
     } catch (err) {
       console.error('Error while trying to update balance:', err);
@@ -189,6 +242,17 @@ async function connectToDatabase() {
     }
   }
 
+  async function getInventory(user_id) {
+    try {
+      const [rows] = await connection.execute('SELECT * FROM inventory WHERE user_id = ?', [user_id]);
+
+      return rows;
+    } catch (err) {
+      console.error('Error while trying to fetch inventory:', err);
+      throw err;
+    }
+  }
+
   async function getTopUsers(limit) {
     try {
       const query = `SELECT user_id, balance FROM users ORDER BY balance DESC LIMIT ?`;
@@ -210,6 +274,10 @@ async function connectToDatabase() {
     setLastWorkTime,
     getUser,
     getJob,
+    getInventory,
+    getUserItem,
+    addItem,
+    getItem,
     getAllJobs,
     getTopUsers,
     client
