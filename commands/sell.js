@@ -37,6 +37,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
     .setTitle(`💰 Item sold`)
+    .setColor('#2C2F33')
     .setDescription(`You sold \`${amount}\` ${item.name} for \`${item.sell_value}\` 🪙.`)
     .setColor('#2C2F33')
 

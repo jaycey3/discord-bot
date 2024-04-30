@@ -23,7 +23,7 @@ module.exports = {
 
     const serverEmbed = new EmbedBuilder()
       .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
-      .setColor("#2C2F33")
+      .setColor('#2C2F33')
       .addFields(
         { name: 'Server Name', value: interaction.guild.name, inline: true },
         { name: 'Owner', value: `<@${interaction.guild.ownerId}>`, inline: true },

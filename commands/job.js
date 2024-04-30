@@ -48,6 +48,7 @@ module.exports = {
 
             const applyEmbed = new EmbedBuilder()
             .setTitle('📑 Available Jobs')
+            .setColor('#2C2F33')
             .setDescription(`This is a list of all available jobs. Please select the job you would like to apply for using the select menu under this message.\n\nYou have \`3 minutes\` to select a job.`);
 
             const jobList = await interaction.editReply({ embeds: [applyEmbed], components: [row] });
@@ -67,6 +68,7 @@ module.exports = {
 
                 const appliedEmbed = new EmbedBuilder()
                 .setTitle('🎉 Job Application')
+                .setColor('#2C2F33')
                 .setDescription(`Congratulations, **${user.displayName}**! You are now working as a **${jobEmoji} ${jobName}**!`)
                 .setFooter({ text: 'You can use /work to start working!' });
 
@@ -89,6 +91,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setTitle(`👷 Job Information`)
+                .setColor('#2C2F33')
                 .setDescription(`You are currently working as a **${jobEmoji} ${jobName}**.`)
                 .addFields(
                     { name: 'Salary', value: `\`${jobSalary.toLocaleString()}\` 🪙`, inline: true },
@@ -107,6 +110,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setTitle('😢 We are sorry to see you go')
+                .setColor('#2C2F33')
                 .setDescription(`We hope you enjoyed your time as a **${jobEmoji} ${jobName}**.`);
 
             try {

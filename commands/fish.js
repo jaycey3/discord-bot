@@ -39,6 +39,7 @@ module.exports = {
   
     const embed = new EmbedBuilder()
     .setTitle('🎣 Fishing')
+    .setColor('#2C2F33')
     .setDescription(`You caught a **${item.name}**!
     The item has been added to your \`/inventory\`.`)
     .setFooter({ text: 'You can sell your fish for money using /sell.'})

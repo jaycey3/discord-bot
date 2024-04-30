@@ -16,6 +16,7 @@ module.exports = {
         if (breeds == undefined) {
           const embed = new EmbedBuilder()
           .setTitle("🐱 Random cat")
+          .setColor('#2C2F33')
           .setDescription("No breed information available!")
           .setImage(cat.url)
           .setTimestamp();
