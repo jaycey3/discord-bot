@@ -1,10 +1,10 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
-    cooldown: 10,
+  cooldown: 10,
   data: new SlashCommandBuilder()
     .setName('fish')
-    .setDescription('Catch items from the sea to!'),
+    .setDescription('Catch items from the sea to sell for money!'),
   async execute(interaction) {
     const { getItem, addItem } = require('../index');
 
