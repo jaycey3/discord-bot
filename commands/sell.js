@@ -52,20 +52,26 @@ module.exports = {
     } else if (interaction.options.getSubcommand() === 'all') {
       const items = await getInventory(interaction.user.id);
 
-      let description = '';
+      let itemTotal = 0;
+      let total = 0;
+      let itemList = '';
 
       if (items.length > 0) {
         for (let i of items) {
           const item = await getItem(i.item_id);
           const sellValue = item.sell_value * i.amount;
 
-          description += `Sold \`${i.amount}\` **${item.name}** for \`${sellValue}\` 🪙\n`;
+          itemList += `Sold \`${i.amount}\` **${item.name}** for \`${sellValue}\` 🪙\n`;
+          itemTotal += i.amount;
+          total += sellValue;
           await addItem(interaction.user.id, i.item_id, -i.amount);
           await addBalance(interaction.user.id, sellValue);
         }
       } else {
         return interaction.reply({ content: `⚠️ **You do not have any items to sell in your inventory.**`, ephemeral: true });
       }
+
+      let description = `You sold \`${itemTotal}\` items for \`${total}\` 🪙\n\n` + itemList;
 
       const embed = new EmbedBuilder()
         .setTitle(`💰 Items sold`)
