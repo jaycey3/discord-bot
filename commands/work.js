@@ -32,14 +32,14 @@ module.exports = {
 		};
 
 		if (lastWorkDate && now - lastWorkDate >= 86400000) {
-            await resetWorkStreak(user.id);
+			await resetWorkStreak(user.id);
 			streak = 0;
-        }
+		}
 
 		const embed = new EmbedBuilder()
-		.setTitle(`${jobEmoji} ${jobName}`)
-		.setColor('#2C2F33')
-		.setDescription(`Thank you for completing your shift, **${user.displayName}**!
+			.setTitle(`${jobEmoji} ${jobName}`)
+			.setColor('#2C2F33')
+			.setDescription(`Thank you for completing your shift, **${user.displayName}**!
 
 		Your salary of \`${jobSalary.toLocaleString()}\` 🪙 has been added to your balance.
 		You now have \`${currentWorkXP + 1}\` 🎖️ work experience.
@@ -53,16 +53,16 @@ module.exports = {
 
 			console.log('BONUS GIVEN')
 			const bonusAmount = bonus[bonusLevel];
-			addBalance(user.id, bonusAmount);
+			await addBalance(user.id, bonusAmount);
 			embed.addFields(
 				{ name: 'Bonus', value: `You have received a bonus of \`${bonusAmount}\` 🪙 for having a work streak of \`${streak + 1}\` 🔥` }
 			);
 		}
 
-		setLastWorkTime(user.id, now);
-		addWorkStreak(user.id, 1);
-		addBalance(user.id, jobSalary);
-		addWorkXP(user.id, 1);
-		interaction.reply({ embeds: [embed] });
+		await setLastWorkTime(user.id, now);
+		await addWorkStreak(user.id, 1);
+		await addBalance(user.id, jobSalary);
+		await addWorkXP(user.id, 1);
+		await interaction.reply({ embeds: [embed] });
 	},
 };
