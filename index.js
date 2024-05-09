@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials, EmbedBuilder } = require('discord.js');
 const { token, host, user, password, database } = require('./config.json');
 
 const client = new Client({
@@ -73,7 +73,8 @@ async function connectToDatabase() {
           job_id: 0,
           work_xp: 0,
           work_streak: 0,
-          last_work_date: 0
+          last_work_date: 0,
+          xp: 0
         };
       }
     } catch (err) {
@@ -141,6 +142,29 @@ async function connectToDatabase() {
     }
   }
 
+  async function addXP(user_id, amount, channel) {
+    try {
+      const user = await getUser(user_id);
+      if (user) {
+        const updatedExperience = user.xp + amount;
+        connection.execute('UPDATE users SET xp = ? WHERE user_id = ?', [updatedExperience, user_id]);
+        console.log('Experience updated for user', user_id);
+
+        const levels = await getLevels();
+        const currentLevel = levels.findIndex(level => level.total_xp > user.xp);
+        const newLevel = levels.findIndex(level => level.total_xp > updatedExperience);
+
+        if (newLevel > currentLevel) {
+          const levelChannel = client.channels.cache.get(channel);
+          levelChannel.send(`🎉 **Congratulations <@${user_id}>!** You have reached level **${newLevel}**!`);
+        }
+      }
+    } catch (err) {
+      console.error('Error while trying to update experience:', err);
+      throw err;
+    }
+  }
+
   async function addItem(user_id, item_id, amount) {
     try {
       const item = await getUserItem(user_id, item_id);
@@ -150,7 +174,6 @@ async function connectToDatabase() {
       } else {
         const updatedAmount = item.amount + amount;
         if (updatedAmount <= 0) {
-          // Verwijder de rij uit de database als de hoeveelheid nul of negatief is
           connection.execute('DELETE FROM inventory WHERE user_id = ? AND item_id = ?', [user_id, item_id]);
           console.log('Item removed from inventory for user', user_id);
         } else {
@@ -253,6 +276,17 @@ async function connectToDatabase() {
     }
   }
 
+  async function getLevels() {
+    try {
+      const [rows] = await connection.execute('SELECT * FROM levels');
+
+      return rows;
+    } catch (err) {
+      console.error('Error while trying to fetch inventory:', err);
+      throw err;
+    }
+  }
+
   async function getTopUsers(limit) {
     try {
       const query = `SELECT user_id, balance FROM users ORDER BY balance DESC LIMIT ?`;
@@ -268,12 +302,14 @@ async function connectToDatabase() {
   module.exports = {
     addBalance,
     addWorkXP,
+    addXP,
     addWorkStreak,
     setJob,
     resetWorkStreak,
     setLastWorkTime,
     getUser,
     getJob,
+    getLevels,
     getInventory,
     getUserItem,
     addItem,
@@ -328,6 +364,9 @@ client.on('interactionCreate', async interaction => {
   setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
   try {
+    const { addXP } = require('./index');
+
+    await addXP(interaction.user.id, 50, interaction.channelId);
     await command.execute(interaction);
   }
   catch (error) {
