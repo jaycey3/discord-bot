@@ -11,7 +11,8 @@ module.exports = {
         .setMaxValue(100000)
         .setRequired(true)),
   async execute(interaction) {
-    const { addBalance, getUser } = require('../index');
+    const { addBalance } = require('../sql/economyQueries');
+    const { getUser } = require('../sql/userQueries');
     const user_id = interaction.user.id;
     const user = await getUser(user_id);
     const balance = user.balance;

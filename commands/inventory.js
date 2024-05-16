@@ -5,24 +5,24 @@ module.exports = {
     .setName('inventory')
     .setDescription('Show your item inventory.'),
   async execute(interaction) {
-    const { getInventory, getItem } = require('../index');
+    const { getInventory, getItem } = require('../sql/itemQueries');
 
     const items = await getInventory(interaction.user.id);
 
     let description;
 
     const embed = new EmbedBuilder()
-    .setTitle(`📦 ${interaction.user.displayName}'s Inventory`)
-    .setThumbnail(interaction.user.displayAvatarURL())
-    .setColor('#2C2F33')
+      .setTitle(`📦 ${interaction.user.displayName}'s Inventory`)
+      .setThumbnail(interaction.user.displayAvatarURL())
+      .setColor('#2C2F33')
 
     if (items.length > 0) {
-        description = 'This is your inventory, use `/sell` to sell items.'
+      description = 'This is your inventory, use `/sell` to sell items.'
       for (let i of items) {
         const item = await getItem(i.item_id);
 
         embed.addFields(
-            { name: `${item.name} [${i.amount}]`, value: `Sell ID: \`${item.id}\`\nSell value: \`${item.sell_value}\` 🪙` }
+          { name: `${item.name} [${i.amount}]`, value: `Sell ID: \`${item.id}\`\nSell value: \`${item.sell_value}\` 🪙` }
         );
       }
     } else {

@@ -12,7 +12,8 @@ module.exports = {
         .setDescription('The user you want to check the level of.')
         .setRequired(false)),
   async execute(interaction) {
-    const { getUser, getLevels } = require('../index');
+    const { getUser } = require('../sql/userQueries');
+    const { getLevels } = require('../sql/xpQueries');
     const target = interaction.options.getUser('user') ?? interaction.user;
     const user = await getUser(target.id);
     const levels = await getLevels();
@@ -31,10 +32,13 @@ module.exports = {
     let nextLevelXP = levels[userLevel]?.xp ?? 0;
     let percentage = Math.floor((currentXP / nextLevelXP) * 100);
     let barLength = Math.floor((percentage / 100) * 450);
-    let levelColor = '#ffbb00';
+    let levelColor = '#ff69f7';
 
     const canvas = Canvas.createCanvas(700, 200);
     const context = canvas.getContext('2d');
+
+    // const background = await Canvas.loadImage('./images/night.png');
+    // context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
     // Background
     context.beginPath();
@@ -45,7 +49,7 @@ module.exports = {
     // small rectangle
     context.beginPath();
     context.roundRect(25, 25, 650, 150, 5);
-    context.fillStyle = '#000000';
+    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
     context.fill();
 
     // level bar background

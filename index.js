@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits, Partials, EmbedBuilder } = require('discord.js');
-const { token, host, user, password, database } = require('./config.json');
+const { token } = require('./config.json');
 
 const client = new Client({
   intents: [
@@ -20,7 +20,8 @@ const client = new Client({
   ],
 });
 
-//Database
+// Database Connection
+const { host, user, password, database } = require('./config.json');
 const mysql = require('mysql2/promise');
 
 async function connectToDatabase() {
@@ -41,283 +42,7 @@ async function connectToDatabase() {
 
 (async () => {
   const connection = await connectToDatabase();
-
-  async function createUser(user_id) {
-    const newUser = {
-      user_id: user_id,
-      balance: 0,
-      job_id: 0,
-      work_xp: 0
-    };
-
-    try {
-      const result = await connection.execute(`INSERT INTO users (user_id, balance, job_id, work_xp) VALUES (?, ?, ?, ?)`, [newUser.user_id, newUser.balance, newUser.job_id, newUser.work_xp]);
-      console.log('Added a new user', result);
-    } catch (err) {
-      console.error('Error while trying to add user:', err);
-    }
-  }
-
-  async function getUser(user_id) {
-    try {
-      const [rows] = await connection.execute('SELECT * FROM users WHERE user_id = ?', [user_id]);
-      if (rows && rows.length > 0) {
-        return rows[0];
-      } else {
-        console.log('User not found, creating a new one');
-        await createUser(user_id);
-        // Return a default user object with default values
-        return {
-          user_id: user_id,
-          balance: 0,
-          job_id: 0,
-          work_xp: 0,
-          work_streak: 0,
-          last_work_date: 0,
-          xp: 0
-        };
-      }
-    } catch (err) {
-      console.error('Error while trying to fetch user:', err);
-      throw err;
-    }
-  }
-
-  async function getJob(job_id) {
-    try {
-      const [rows] = await connection.execute('SELECT * FROM jobs WHERE id = ?', [job_id]);
-      if (rows && rows.length > 0) {
-        return rows[0];
-      } else {
-        console.log('Job not found.');
-        return;
-      }
-    } catch (err) {
-      console.error('Error while trying to fetch job:', err);
-      throw err;
-    }
-  }
-
-  async function getItem(item_id) {
-    try {
-      const [rows] = await connection.execute('SELECT * FROM items WHERE id = ?', [item_id]);
-      if (rows && rows.length > 0) {
-        return rows[0];
-      } else {
-        console.log('Item not found.');
-        return;
-      }
-    } catch (err) {
-      console.error('Error while trying to fetch item:', err);
-      throw err;
-    }
-  }
-
-  async function getUserItem(user_id, item_id) {
-    try {
-      const [rows] = await connection.execute('SELECT * FROM inventory WHERE user_id = ? AND item_id = ?', [user_id, item_id]);
-      if (rows && rows.length > 0) {
-        return rows[0];
-      } else {
-        console.log('User item not found.');
-        return;
-      }
-    } catch (err) {
-      console.error('Error while trying to fetch user item:', err);
-      throw err;
-    }
-  }
-
-  async function addBalance(user_id, amount) {
-    try {
-      const user = await getUser(user_id);
-      if (user) {
-        const updatedBalance = user.balance + amount;
-        connection.execute('UPDATE users SET balance = ? WHERE user_id = ?', [updatedBalance, user_id]);
-        console.log('Balance updated for user', user_id);
-      }
-    } catch (err) {
-      console.error('Error while trying to update balance:', err);
-      throw err;
-    }
-  }
-
-  async function addXP(user_id, amount, channel) {
-    try {
-      const user = await getUser(user_id);
-      if (user) {
-        const updatedExperience = user.xp + amount;
-        connection.execute('UPDATE users SET xp = ? WHERE user_id = ?', [updatedExperience, user_id]);
-        console.log('Experience updated for user', user_id);
-
-        const levels = await getLevels();
-        const currentLevel = levels.findIndex(level => level.total_xp > user.xp);
-        const newLevel = levels.findIndex(level => level.total_xp > updatedExperience);
-
-        if (newLevel > currentLevel) {
-          const levelChannel = client.channels.cache.get(channel);
-          levelChannel.send(`🎉 **Congratulations <@${user_id}>!** You have reached level **${newLevel}**!`);
-        }
-      }
-    } catch (err) {
-      console.error('Error while trying to update experience:', err);
-      throw err;
-    }
-  }
-
-  async function addItem(user_id, item_id, amount) {
-    try {
-      const item = await getUserItem(user_id, item_id);
-      if (!item) {
-        connection.execute('INSERT INTO inventory (user_id, item_id, amount) VALUES (?, ?, ?)', [user_id, item_id, amount]);
-        console.log('Item added to inventory for user', user_id);
-      } else {
-        const updatedAmount = item.amount + amount;
-        if (updatedAmount <= 0) {
-          connection.execute('DELETE FROM inventory WHERE user_id = ? AND item_id = ?', [user_id, item_id]);
-          console.log('Item removed from inventory for user', user_id);
-        } else {
-          connection.execute('UPDATE inventory SET amount = ? WHERE user_id = ? AND item_id = ?', [updatedAmount, user_id, item_id]);
-          console.log('Inventory updated for user', user_id);
-        }
-      }
-    } catch (err) {
-      console.error('Error while trying to update balance:', err);
-      throw err;
-    }
-  }
-
-  async function addWorkXP(user_id, amount) {
-    try {
-      const user = await getUser(user_id);
-      if (user) {
-        const updatedWorkXP = user.work_xp + amount;
-        connection.execute('UPDATE users SET work_xp = ? WHERE user_id = ?', [updatedWorkXP, user_id]);
-        console.log('Work XP updated for user', user_id);
-      }
-    } catch (err) {
-      console.error('Error while trying to update work XP:', err);
-      throw err;
-    }
-  }
-
-  async function addWorkStreak(user_id, amount) {
-    try {
-      const user = await getUser(user_id);
-      if (user) {
-        const updatedStreak = user.work_streak + amount;
-        connection.execute('UPDATE users SET work_streak = ? WHERE user_id = ?', [updatedStreak, user_id]);
-        console.log('Work Streak updated for user', user_id);
-      }
-    } catch (err) {
-      console.error('Error while trying to update work streak:', err);
-      throw err;
-    }
-  }
-
-  async function setJob(user_id, job_id) {
-    try {
-      const user = await getUser(user_id);
-      if (user) {
-        connection.execute('UPDATE users SET job_id = ? WHERE user_id = ?', [job_id, user_id]);
-        console.log('Job updated for user', user_id);
-      }
-    } catch (err) {
-      console.error('Error while trying to update job:', err);
-      throw err;
-    }
-  }
-
-  async function resetWorkStreak(user_id) {
-    try {
-      const user = await getUser(user_id);
-      if (user) {
-        connection.execute('UPDATE users SET work_streak = DEFAULT WHERE user_id = ?', [user_id]);
-        console.log('Work streak reset.', user_id);
-      }
-    } catch (err) {
-      console.error('Error while trying to reset work streak:', err);
-      throw err;
-    }
-  }
-
-  async function setLastWorkTime(user_id, lastWorkTime) {
-    try {
-      const user = await getUser(user_id);
-      if (user) {
-        connection.execute('UPDATE users SET last_work_date = ? WHERE user_id = ?', [lastWorkTime, user_id]);
-        console.log('Last work time updated for user', user_id);
-      }
-    } catch (err) {
-      console.error('Error while trying to update last work time:', err);
-      throw err;
-    }
-  }
-
-  async function getAllJobs() {
-    try {
-      const [rows] = await connection.execute('SELECT * FROM jobs');
-
-      return rows;
-    } catch (err) {
-      console.error('Error while trying to fetch jobs:', err);
-      throw err;
-    }
-  }
-
-  async function getInventory(user_id) {
-    try {
-      const [rows] = await connection.execute('SELECT * FROM inventory WHERE user_id = ?', [user_id]);
-
-      return rows;
-    } catch (err) {
-      console.error('Error while trying to fetch inventory:', err);
-      throw err;
-    }
-  }
-
-  async function getLevels() {
-    try {
-      const [rows] = await connection.execute('SELECT * FROM levels');
-
-      return rows;
-    } catch (err) {
-      console.error('Error while trying to fetch inventory:', err);
-      throw err;
-    }
-  }
-
-  async function getTopUsers(limit) {
-    try {
-      const query = `SELECT user_id, balance FROM users ORDER BY balance DESC LIMIT ?`;
-      const [rows] = await connection.execute(query, [limit]);
-
-      return rows;
-    } catch (error) {
-      console.error('Error fetching top users:', error);
-      throw error;
-    }
-  }
-
-  module.exports = {
-    addBalance,
-    addWorkXP,
-    addXP,
-    addWorkStreak,
-    setJob,
-    resetWorkStreak,
-    setLastWorkTime,
-    getUser,
-    getJob,
-    getLevels,
-    getInventory,
-    getUserItem,
-    addItem,
-    getItem,
-    getAllJobs,
-    getTopUsers,
-    client
-  };
+  module.exports = { client, connection };
 })();
 
 // Command Handler
@@ -364,7 +89,7 @@ client.on('interactionCreate', async interaction => {
   setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
   try {
-    const { addXP } = require('./index');
+    const { addXP } = require('./sql/xpQueries');
 
     await addXP(interaction.user.id, 50, interaction.channelId);
     await command.execute(interaction);

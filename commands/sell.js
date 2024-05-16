@@ -23,7 +23,8 @@ module.exports = {
         .setDescription('Sell all items in your inventory.')
     ),
   async execute(interaction) {
-    const { getUserItem, getItem, addItem, addBalance, getInventory } = require('../index');
+    const { getUserItem, getItem, addItem, getInventory } = require('../sql/itemQueries');
+    const { addBalance } = require('../sql/economyQueries');
 
     if (interaction.options.getSubcommand() === 'item') {
       const item_id = interaction.options.getInteger('id');

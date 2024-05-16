@@ -6,7 +6,10 @@ module.exports = {
 		.setName('work')
 		.setDescription('Work to get paid!'),
 	async execute(interaction) {
-		const { getUser, addBalance, getJob, addWorkXP, addWorkStreak, setLastWorkTime, resetWorkStreak } = require('../index');
+		const { addWorkXP, addWorkStreak, setLastWorkTime, resetWorkStreak } = require('../sql/workQueries');
+		const { getUser } = require('../sql/userQueries');
+		const { addBalance } = require('../sql/economyQueries');
+		const { getJob } = require('../sql/jobQueries');
 		const user = interaction.user;
 		let { job_id: currentJob, work_xp: currentWorkXP, work_streak: streak, last_work_date: last_work_date } = await getUser(user.id);
 

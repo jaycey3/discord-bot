@@ -6,7 +6,7 @@ module.exports = {
     .setName('daily')
     .setDescription('Claim your daily moneys.'),
   async execute(interaction) {
-    const { addBalance } = require('../index');
+    const { addBalance } = require('../sql/economyQueries');
     const daily = 5000;
 
     const embed = new EmbedBuilder()

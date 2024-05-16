@@ -4,7 +4,7 @@ module.exports = {
     name: 'messageCreate',
     once: false,
     async execute(message) {
-        const { addXP } = require('../index');
+        const { addXP } = require('../sql/xpQueries');
 
         const amount = Math.floor(Math.random() * (25 - 10 + 1)) + 10;
 

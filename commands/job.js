@@ -17,7 +17,8 @@ module.exports = {
                 .setName('quit')
                 .setDescription('Quit your current job.')),
     async execute(interaction) {
-        const { setJob, getUser, getJob, getAllJobs } = require('../index');
+        const { setJob, getJob, getAllJobs } = require('../sql/jobQueries');
+        const { getUser } = require('../sql/userQueries');
         const user = interaction.user;
         const { job_id: currentJob, work_xp: currentWorkXP, work_streak: streak } = await getUser(user.id);
 

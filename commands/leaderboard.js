@@ -5,7 +5,8 @@ module.exports = {
     .setName('leaderboard')
     .setDescription('Shows the richest users.'),
   async execute(interaction) {
-    const { getTopUsers, client } = require('../index');
+    const { client } = require('../index');
+    const { getTopUsers } = require('../sql/economyQueries');
 
     const positionEmoji = {
         1: '1️⃣',

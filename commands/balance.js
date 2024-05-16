@@ -9,7 +9,7 @@ module.exports = {
         .setDescription('The user you want to check the balance of.')
         .setRequired(false)),
   async execute(interaction) {
-    const { getUser } = require('../index');
+    const { getUser } = require('../sql/userQueries');
     const target = interaction.options.getUser('user') ?? interaction.user;
     const user = await getUser(target.id);
 

@@ -13,7 +13,8 @@ module.exports = {
         .setDescription('The amount you want to transfer to the user.')
         .setRequired(true)),
   async execute(interaction) {
-    const { getUser, addBalance } = require('../index');
+    const { addBalance } = require('../sql/economyQueries');
+    const { getUser } = require('../sql/userQueries');
     const user = await getUser(interaction.user.id);
     const balance = user.balance;
 
