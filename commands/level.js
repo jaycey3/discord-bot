@@ -14,6 +14,7 @@ module.exports = {
   async execute(interaction) {
     const { getUser } = require('../sql/userQueries');
     const { getLevels } = require('../sql/xpQueries');
+    const { getUserSettings, getSetting } = require('../sql/settingsQueries');
     const target = interaction.options.getUser('user') ?? interaction.user;
     const user = await getUser(target.id);
     const levels = await getLevels();
@@ -32,7 +33,25 @@ module.exports = {
     let nextLevelXP = levels[userLevel]?.xp ?? 0;
     let percentage = Math.floor((currentXP / nextLevelXP) * 100);
     let barLength = Math.floor((percentage / 100) * 450);
-    let levelColor = '#ff69f7';
+    if (barLength < 30) barLength = 30;
+
+    let color;
+
+    const userSettings = await getUserSettings(target.id);
+    const colorId = userSettings.level_color;
+
+    if (colorId == 0) {
+      color = '#fcba03';
+    } else if (colorId == 9) {
+      if (userSettings.custom_color === 'none') {
+        color = '#fcba03';
+      } else {
+        color = userSettings.custom_color;
+      }
+    } else {
+      const getColor = await getSetting(colorId);
+      color = getColor.value
+    }
 
     const canvas = Canvas.createCanvas(700, 200);
     const context = canvas.getContext('2d');
@@ -60,8 +79,8 @@ module.exports = {
 
     // level bar
     context.beginPath();
-    context.roundRect(180, 120, barLength, 30, 20);
-    context.fillStyle = levelColor;
+    context.roundRect(178, 119.5, barLength + 3, 31, 20);
+    context.fillStyle = color;
     context.fill();
 
     // Name
@@ -81,7 +100,7 @@ module.exports = {
     // Level
     context.beginPath()
     context.font = '30px rubik-font';
-    context.fillStyle = levelColor;
+    context.fillStyle = color;
     context.textAlign = 'right';
     context.fillText(`LEVEL ${userLevel}`, 625, 70)
 

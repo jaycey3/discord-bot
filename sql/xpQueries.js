@@ -3,15 +3,14 @@ const { getUser } = require('./userQueries');
 
 async function getLevels() {
     try {
-        const result = await connection.connection.execute('SELECT * FROM levels');
-        const rows = result._rows;
-
-        return rows;
+      const [rows] = await connection.execute('SELECT * FROM levels');
+      //console.log('Rows:', rows); // Use a comma to log the array correctly
+      return rows;
     } catch (err) {
-        console.error('Error while trying to fetch levels:', err);
-        throw err;
+      console.error('Error while trying to fetch inventory:', err);
+      throw err;
     }
-}
+  }
 
 async function addXP(user_id, amount, channel) {
     try {

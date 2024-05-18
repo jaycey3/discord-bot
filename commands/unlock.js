@@ -13,78 +13,75 @@ module.exports = {
                 .setName('background')
                 .setDescription('Unlock a level background.')),
     async execute(interaction) {
-        const { getUserSettings, getAllUnlockables, getUnlockable, getUserSetting } = require('../sql/settingsQueries');
+        const { getAllSettings, getSetting, unlockSetting, getAllUnlockedSettings } = require('../sql/settingsQueries');
         const { getUser } = require('../sql/userQueries');
-        const user = interaction.user;
-        const settings = await getUserSettings(user.id);
-        const unlockables = await getAllUnlockables();
+        const { addBalance } = require('../sql/economyQueries');
+        const target = interaction.user;
+        const user = await getUser(target.id);
+        const unlockedSettings = await getAllUnlockedSettings(target.id);
+        const settings = await getAllSettings();
 
         if (interaction.options.getSubcommand() === 'color') {
+            await interaction.deferReply();
 
-            let unlockedColors = [];
+            let colorsToUnlock = [];
+            const unlockedSettingIds = unlockedSettings.map(setting => setting.setting_id);
 
-            function getAllUnlockedColors() {
-                for (let unlockable of unlockables) {
-                    getUserSetting(user.id, unlockable.id);
-
-                    unlockedColors.push(unlockable.id);
+            for (let setting of settings) {
+                if (setting.type === 'level_color' && !unlockedSettingIds.includes(setting.id)) {
+                    colorsToUnlock.push(setting);
                 }
             }
 
-            await interaction.deferReply();
-
             const select = new StringSelectMenuBuilder()
-			.setCustomId('select')
-			.setPlaceholder('Please select setting to unlock.');
+                .setCustomId('select')
+                .setPlaceholder('Please select setting to unlock.');
 
-            for (let job of unlockables) {
-                const { name: jobName, salary: jobSalary, xp: jobXP, emoji: jobEmoji, id: jobId } = await getJob(job.id);
+            for (let color of colorsToUnlock) {
+                const { id: id, name: name, price: price } = await getSetting(color.id);
                 select.addOptions(
                     new StringSelectMenuOptionBuilder()
-					.setLabel(`${jobEmoji} ${jobName}`)
-					.setDescription(`${jobSalary.toLocaleString()} 🪙 | ${jobXP} 🎖️`)
-					.setValue(jobId.toString()),
+                        .setLabel(name)
+                        .setDescription(`Cost: ${price} 🪙`)
+                        .setValue(id.toString()),
                 );
             }
 
             const row = new ActionRowBuilder()
-	        .addComponents(select);
+                .addComponents(select);
 
             const embed = new EmbedBuilder()
-            .setTitle('📑 Available Jobs')
-            .setColor('#2C2F33')
-            .setDescription(`This is a list of all available jobs. Please select the job you would like to apply for using the select menu under this message.\n\nYou have \`3 minutes\` to select a job.`);
-
-            const jobList = await interaction.editReply({ embeds: [embed], components: [row] });
-            
-            const collectorFilter = i => i.user.id === user.id;
-            
-            try {
-                const selection = await jobList.awaitMessageComponent({ filter: collectorFilter, time: 180_000 });
-                const job = selection.values[0];
-
-                const { name: jobName, xp: jobXP, emoji: jobEmoji } = await getJob(job);
-
-                if (jobXP > currentWorkXP) {
-                    interaction.deleteReply();
-                    return selection.reply({ content: `⚠️ **You need at least \`${jobXP}\` 🎖️ work experience to apply for this job. You currently have \`${currentWorkXP}\` 🎖️ work experience.**`, ephemeral: true, });
-                }
-
-                const appliedEmbed = new EmbedBuilder()
-                .setTitle('🎉 Job Application')
+                .setTitle('🎨 Colors to unlock')
                 .setColor('#2C2F33')
-                .setDescription(`Congratulations, **${user.displayName}**! You are now working as a **${jobEmoji} ${jobName}**!`)
-                .setFooter({ text: 'You can use /work to start working!' });
+                .setDescription(`This is a list of all available colors. Please select the color you want to unlock using the select menu below.\n\nYou have \`1 minute\` to select a color.`);
 
-                try {
-                    await setJob(user.id, job);
-                    await selection.update({ embeds: [appliedEmbed], components: [] });
-                } catch (error) {
-                    console.log("Error: ", error);
-                    interaction.reply('⚠️ **There was an error trying to apply for a job.**');
+            const colorList = await interaction.editReply({ embeds: [embed], components: [row] });
+
+            const collectorFilter = i => i.user.id === target.id;
+
+            try {
+                const selection = await colorList.awaitMessageComponent({ filter: collectorFilter, time: 60_000 });
+                const color = selection.values[0];
+
+                const { id: id, name: name, price: price } = await getSetting(color);
+                const balance = user.balance;
+
+                if (price > balance) {
+                    interaction.deleteReply();
+                    return selection.reply({ content: `⚠️ **You do not have enough 🪙 to unlock ${name}!**`, ephemeral: true, });
+                } else {
+                    await addBalance(target.id, -price);
+                    await unlockSetting(target.id, id);
+                    const unlockedEmbed = new EmbedBuilder()
+                        .setTitle('🎉 Color Unlocked')
+                        .setColor('#2C2F33')
+                        .setDescription(`Congratulations, **${target.displayName}**! You have unlocked the color **${name}**!`)
+                        .setFooter({ text: 'You can now use this color in your /settings.' });
+
+                    await selection.update({ embeds: [unlockedEmbed], components: [] });
                 }
             } catch (e) {
-                await interaction.editReply({ content: '⏰ **No job was selected within 3 minutes.**', components: [], embeds: [] });
+                await interaction.editReply({ content: '⏰ **No job was selected within 1 minutes.**', components: [], embeds: [], ephemeral: true });
             }
         }
     },

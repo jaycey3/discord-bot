@@ -42,7 +42,19 @@ async function connectToDatabase() {
 
 (async () => {
   const connection = await connectToDatabase();
-  module.exports = { client, connection };
+
+  async function getLevels() {
+    try {
+      const [rows] = await connection.execute('SELECT * FROM levels');
+      //console.log('Rows:', rows); // Use a comma to log the array correctly
+      return rows;
+    } catch (err) {
+      console.error('Error while trying to fetch inventory:', err);
+      throw err;
+    }
+  }
+
+  module.exports = { client, getLevels, connection };
 })();
 
 // Command Handler

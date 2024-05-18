@@ -1,7 +1,7 @@
 const connection = require('../index');
 
 async function createUserSettings(user_id) {
-    const newUser = {
+    const newUserSettings = {
         user_id: user_id,
         level_color: 0,
         custom_color: 'none',
@@ -9,7 +9,7 @@ async function createUserSettings(user_id) {
     };
 
     try {
-        const result = await connection.connection.execute(`INSERT INTO user_settings (user_id, level_color, custom_color, level_background) VALUES (?, ?, ?, ?)`, [newUser.user_id, newUser.level_color, newUser.custom_color, newUser.level_background]);
+        const result = await connection.connection.execute(`INSERT INTO user_settings (user_id, level_color, custom_color, level_background) VALUES (?, ?, ?, ?)`, [newUserSettings.user_id, newUserSettings.level_color, newUserSettings.custom_color, newUserSettings.level_background]);
         console.log('Added new user settings', result);
     } catch (err) {
         console.error('Error while trying to add user settings:', err);
@@ -38,24 +38,24 @@ async function getUserSettings(user_id) {
     }
 }
 
-async function getUnlockable(unlockable_id) {
+async function getSetting(setting_id) {
     try {
-        const [rows] = await connection.connection.execute('SELECT * FROM unlockables WHERE id = ?', [unlockable_id]);
+        const [rows] = await connection.connection.execute('SELECT * FROM settings WHERE id = ?', [setting_id]);
         if (rows && rows.length > 0) {
             return rows[0];
         } else {
-            console.log('Unlockable not found.');
+            console.log('Setting not found.');
             return;
         }
     } catch (err) {
-        console.error('Error while trying to fetch item:', err);
+        console.error('Error while trying to fetch setting:', err);
         throw err;
     }
 }
 
-async function getUserSetting(user_id, unlockable_id) {
+async function getUserSetting(user_id, setting_id) {
     try {
-        const [rows] = await connection.connection.execute('SELECT * FROM settings WHERE user_id = ? AND unlockable_id = ?', [user_id, unlockable_id]);
+        const [rows] = await connection.connection.execute('SELECT * FROM unlocked_settings WHERE user_id = ? AND setting_id = ?', [user_id, setting_id]);
         if (rows && rows.length > 0) {
             return rows[0];
         } else {
@@ -63,49 +63,65 @@ async function getUserSetting(user_id, unlockable_id) {
             return;
         }
     } catch (err) {
-        console.error('Error while trying to fetch user item:', err);
+        console.error('Error while trying to fetch user setting:', err);
         throw err;
     }
 }
 
-async function addSetting(user_id, unlockable_id) {
+async function unlockSetting(user_id, setting_id) {
     try {
-        const item = await getUserItem(user_id, item_id);
-        if (!item) {
-            connection.connection.execute('INSERT INTO inventory (user_id, item_id, amount) VALUES (?, ?, ?)', [user_id, item_id, amount]);
-            console.log('Item added to inventory for user', user_id);
+        const setting = await getUserSetting(user_id, setting_id);
+        if (!setting) {
+            connection.connection.execute('INSERT INTO unlocked_settings (user_id, setting_id) VALUES (?, ?)', [user_id, setting_id]);
+            console.log('Setting unlocked for user', user_id);
         } else {
-            const updatedAmount = item.amount + amount;
-            if (updatedAmount <= 0) {
-                connection.execute('DELETE FROM inventory WHERE user_id = ? AND item_id = ?', [user_id, item_id]);
-                console.log('Item removed from inventory for user', user_id);
-            } else {
-                connection.execute('UPDATE inventory SET amount = ? WHERE user_id = ? AND item_id = ?', [updatedAmount, user_id, item_id]);
-                console.log('Inventory updated for user', user_id);
-            }
+            console.log('Setting already unlocked for user', user_id);
         }
     } catch (err) {
-        console.error('Error while trying to update balance:', err);
+        console.error('Error while trying to unlock setting:', err);
         throw err;
     }
 }
 
-async function getAllUnlockables() {
+async function getAllSettings() {
     try {
-        const [rows] = await connection.connection.execute('SELECT * FROM unlockables');
+        const [rows] = await connection.connection.execute('SELECT * FROM settings');
 
         return rows;
     } catch (err) {
-        console.error('Error while trying to fetch jobs:', err);
+        console.error('Error while trying to fetch settings:', err);
         throw err;
     }
+}
+
+async function getAllUnlockedSettings(user_id) {
+    try {
+        const [rows] = await connection.connection.execute('SELECT * FROM unlocked_settings WHERE user_id = ?', [user_id]);
+
+        return rows;
+    } catch (err) {
+        console.error('Error while trying to fetch inventory:', err);
+        throw err;
+    }
+}
+
+async function updateSetting(user_id, setting, value) {
+    try {
+        await connection.connection.execute(`UPDATE user_settings SET ${setting} = ? WHERE user_id = ?`, [value, user_id]);
+    } catch (err) {
+        console.error('Error while trying to update setting:', err);
+        throw err;
+    }
+
 }
 
 module.exports = {
     createUserSettings,
     getUserSettings,
-    getUnlockable,
+    getSetting,
     getUserSetting,
-    addSetting,
-    getAllUnlockables,
+    unlockSetting,
+    getAllSettings,
+    getAllUnlockedSettings,
+    updateSetting,
 };

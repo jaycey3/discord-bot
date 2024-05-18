@@ -1,5 +1,4 @@
 const connection = require('../index');
-const mysql = require('mysql2/promise');
 
 async function createUser(user_id) {
     const newUser = {
@@ -22,9 +21,9 @@ async function createUser(user_id) {
 
 async function getUser(user_id) {
     try {
-        const result = await connection.connection.execute('SELECT * FROM users WHERE user_id = ?', [user_id]);
-        if (result && result.length > 0) {
-            return result[0];
+        const [rows] = await connection.connection.execute('SELECT * FROM users WHERE user_id = ?', [user_id]);
+        if (rows && rows.length > 0) {
+            return rows[0];
         } else {
             console.log('User not found, creating a new one');
             await createUser(user_id);
