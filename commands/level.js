@@ -56,19 +56,33 @@ module.exports = {
     const canvas = Canvas.createCanvas(700, 200);
     const context = canvas.getContext('2d');
 
-    // const background = await Canvas.loadImage('./images/night.png');
+    let background;
+    const backgroundId = userSettings.level_background;
+
+    if (backgroundId == 0) {
+      context.beginPath();
+      context.rect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = '#1f1f1f';
+      context.fill();
+    } else {
+      const getBackground = await getSetting(backgroundId);
+      background = await Canvas.loadImage(`./backgrounds/${getBackground.value}.png`);
+      context.drawImage(background, 0, 0, canvas.width, canvas.height);
+    }
+
+    // const background = await Canvas.loadImage('./backgrounds/night.png');
     // context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
     // Background
-    context.beginPath();
-    context.rect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = '#1f1f1f';
-    context.fill();
+    // context.beginPath();
+    // context.rect(0, 0, canvas.width, canvas.height);
+    // context.fillStyle = '#1f1f1f';
+    // context.fill();
 
     // small rectangle
     context.beginPath();
     context.roundRect(25, 25, 650, 150, 5);
-    context.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    context.fillStyle = 'rgba(0, 0, 0, 0.8)';
     context.fill();
 
     // level bar background

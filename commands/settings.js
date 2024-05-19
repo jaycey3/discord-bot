@@ -34,6 +34,9 @@ module.exports = {
     }
     if (level_background === 0) {
       levelBackground = 'Default';
+    } else {
+      let background = await getSetting(level_background);
+      levelBackground = background.name;
     }
 
     if (custom_color === 'none') {
@@ -49,6 +52,13 @@ module.exports = {
           .setLabel('Change Level Color')
           .setStyle(ButtonStyle.Secondary)
           .setEmoji('🎨')
+      )
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('level_background')
+          .setLabel('Change Level Background')
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji('🖼️')
       );
 
     const embed = new EmbedBuilder()
@@ -202,9 +212,85 @@ module.exports = {
           console.log(error);
           selection.editReply({ embeds: [embed], components: [] });
         }
-
       } else if (selection.customId === 'level_background') {
-        // Handle level background change
+        const select = new StringSelectMenuBuilder()
+          .setCustomId('select')
+          .setPlaceholder('Please select a background.');
+
+        if (level_background !== 0) {
+          select.addOptions(
+            new StringSelectMenuOptionBuilder()
+              .setLabel('🔄 Default')
+              .setValue('0')
+          );
+        }
+
+        let unlockedSettings = await getAllUnlockedSettings(user.id);
+
+        let unlockedBackgrounds = [];
+
+        for (let setting of unlockedSettings) {
+          let background = await getSetting(setting.setting_id);
+
+          if (background.type === 'level_bg') {
+            unlockedBackgrounds.push(background);
+          }
+        }
+
+        if (unlockedBackgrounds.length === 0) {
+          selection.reply({ content: '⚠️ **You have no backgrounds unlocked. Please unlock a background first using `/unlock`.**', ephemeral: true });
+          interaction.editReply({ components: [] });
+          return;
+        }
+
+        for (let background of unlockedBackgrounds) {
+          const { id, name } = background;
+          if (id === level_background) continue;
+
+          select.addOptions(
+            new StringSelectMenuOptionBuilder()
+              .setLabel(name)
+              .setValue(id.toString())
+          );
+        }
+
+        const backgroundSelectEmbed = new EmbedBuilder()
+          .setTitle('🖼️ Select a background')
+          .setDescription('Please select the background that you want to show on your level card using the select menu below.')
+          .setColor('#2C2F33');
+
+        const selectMenu = new ActionRowBuilder()
+          .addComponents(select);
+
+        const backgroundSelection = await selection.update({ embeds: [backgroundSelectEmbed], components: [selectMenu] });
+
+        const colorCollectorFilter = i => i.user.id === interaction.user.id;
+        try {
+          const selectedBackground = await backgroundSelection.awaitMessageComponent({ filter: colorCollectorFilter, time: 180_000 });
+          
+            if (selectedBackground.values[0] == 0) {
+              levelBackground = 'Default';
+            } else {
+              let background = await getSetting(selectedBackground.values[0]);
+              levelBackground = background.name;
+            }
+            
+            const embed = new EmbedBuilder()
+              .setTitle('🛠️ Settings')
+              .setDescription('Here you can view and change your settings. To change a setting, use the buttons below this embed.')
+              .setColor('#2C2F33')
+              .addFields(
+                { name: '🎨 Level color', value: `\`${levelColor}\``, inline: true },
+                { name: '🖼️ Level background', value: `\`${levelBackground}\``, inline: true }
+              );
+
+            await updateSetting(user.id, 'level_background', selectedBackground.values[0]);
+            await selection.editReply({ content: '✅ **Level background has been updated!**', embeds: [embed], components: [] });
+          
+        } catch (error) {
+          console.log(error);
+          selection.editReply({ embeds: [embed], components: [] });
+        }
       }
     } catch (e) {
       console.log(e);
