@@ -15,19 +15,19 @@ async function addBalance(user_id, amount) {
     }
 }
 
-async function getTopUsers(limit) {
+async function getTopEconomyUsers(limit) {
     try {
         const query = `SELECT user_id, balance FROM users ORDER BY balance DESC LIMIT ?`;
         const [rows] = await connection.connection.execute(query, [limit]);
 
         return rows;
     } catch (error) {
-        console.error('Error fetching top users:', error);
+        console.error('Error fetching top economy users:', error);
         throw error;
     }
 }
 
 module.exports = {
     addBalance,
-    getTopUsers,
+    getTopEconomyUsers,
 };

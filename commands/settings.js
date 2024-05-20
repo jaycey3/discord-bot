@@ -1,11 +1,11 @@
-const { 
-  SlashCommandBuilder, 
-  EmbedBuilder, 
-  ActionRowBuilder, 
-  ButtonBuilder, 
-  ButtonStyle, 
-  StringSelectMenuBuilder, 
-  StringSelectMenuOptionBuilder, 
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -26,7 +26,7 @@ module.exports = {
 
     if (level_color === 0) {
       levelColor = 'Default';
-    } else if (level_color === 9){
+    } else if (level_color === 9) {
       levelColor = '🎨 Custom';
     } else {
       let color = await getSetting(level_color);
@@ -189,13 +189,13 @@ module.exports = {
           } else {
             if (selectedColor.values[0] == 0) {
               levelColor = 'Default';
-            } else if (selectedColor.values[0] == 9){
+            } else if (selectedColor.values[0] == 9) {
               levelColor = '🎨 Custom';
             } else {
               let color = await getSetting(selectedColor.values[0]);
               levelColor = color.name;
             }
-            
+
             const embed = new EmbedBuilder()
               .setTitle('🛠️ Settings')
               .setDescription('Here you can view and change your settings. To change a setting, use the buttons below this embed.')
@@ -267,26 +267,26 @@ module.exports = {
         const colorCollectorFilter = i => i.user.id === interaction.user.id;
         try {
           const selectedBackground = await backgroundSelection.awaitMessageComponent({ filter: colorCollectorFilter, time: 180_000 });
-          
-            if (selectedBackground.values[0] == 0) {
-              levelBackground = 'Default';
-            } else {
-              let background = await getSetting(selectedBackground.values[0]);
-              levelBackground = background.name;
-            }
-            
-            const embed = new EmbedBuilder()
-              .setTitle('🛠️ Settings')
-              .setDescription('Here you can view and change your settings. To change a setting, use the buttons below this embed.')
-              .setColor('#2C2F33')
-              .addFields(
-                { name: '🎨 Level color', value: `\`${levelColor}\``, inline: true },
-                { name: '🖼️ Level background', value: `\`${levelBackground}\``, inline: true }
-              );
 
-            await updateSetting(user.id, 'level_background', selectedBackground.values[0]);
-            await selection.editReply({ content: '✅ **Level background has been updated!**', embeds: [embed], components: [] });
-          
+          if (selectedBackground.values[0] == 0) {
+            levelBackground = 'Default';
+          } else {
+            let background = await getSetting(selectedBackground.values[0]);
+            levelBackground = background.name;
+          }
+
+          const embed = new EmbedBuilder()
+            .setTitle('🛠️ Settings')
+            .setDescription('Here you can view and change your settings. To change a setting, use the buttons below this embed.')
+            .setColor('#2C2F33')
+            .addFields(
+              { name: '🎨 Level color', value: `\`${levelColor}\``, inline: true },
+              { name: '🖼️ Level background', value: `\`${levelBackground}\``, inline: true }
+            );
+
+          await updateSetting(user.id, 'level_background', selectedBackground.values[0]);
+          await selection.editReply({ content: '✅ **Level background has been updated!**', embeds: [embed], components: [] });
+
         } catch (error) {
           console.log(error);
           selection.editReply({ embeds: [embed], components: [] });

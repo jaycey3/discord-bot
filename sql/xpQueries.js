@@ -36,7 +36,21 @@ async function addXP(user_id, amount, channel) {
     }
 }
 
+async function getTopLevelUsers(limit) {
+    try {
+        const [rows] = await connection.execute('SELECT user_id, xp FROM users ORDER BY xp DESC LIMIT ?', [limit]);
+        // const query = `SELECT user_id, xp FROM users ORDER BY xp DESC LIMIT ?`;
+        // const [rows] = await connection.connection.execute(query, [limit]);
+
+        return rows;
+    } catch (error) {
+        console.error('Error fetching top level users:', error);
+        throw error;
+    }
+}
+
 module.exports = {
     addXP,
     getLevels,
+    getTopLevelUsers,
 };
