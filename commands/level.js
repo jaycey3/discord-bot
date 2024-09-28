@@ -70,15 +70,6 @@ module.exports = {
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
     }
 
-    // const background = await Canvas.loadImage('./backgrounds/night.png');
-    // context.drawImage(background, 0, 0, canvas.width, canvas.height);
-
-    // Background
-    // context.beginPath();
-    // context.rect(0, 0, canvas.width, canvas.height);
-    // context.fillStyle = '#1f1f1f';
-    // context.fill();
-
     // small rectangle
     context.beginPath();
     context.roundRect(25, 25, 650, 150, 5);
