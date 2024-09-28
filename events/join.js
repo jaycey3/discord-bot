@@ -12,10 +12,10 @@ module.exports = {
     const canvas = Canvas.createCanvas(564, 317);
     const context = canvas.getContext('2d');
 
-    const background = await Canvas.loadImage('./images/welcome.png');
+    const background = await Canvas.loadImage('public/images/welcome.png');
     context.drawImage(background, 0, 0, canvas.width, canvas.height);
 
-    Canvas.GlobalFonts.registerFromPath(join(__dirname, '..', 'fonts', 'Rubik-VariableFont_wght.ttf'), 'rubik-font');
+    Canvas.GlobalFonts.registerFromPath(join(__dirname, '..', 'public', 'fonts', 'Rubik-VariableFont_wght.ttf'), 'rubik-font');
     context.font = '30px rubik-font';
     context.fillStyle = '#ffffff';
     context.textAlign = 'center';

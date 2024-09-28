@@ -66,7 +66,7 @@ module.exports = {
       context.fill();
     } else {
       const getBackground = await getSetting(backgroundId);
-      background = await Canvas.loadImage(`./backgrounds/${getBackground.value}.png`);
+      background = await Canvas.loadImage(`public/backgrounds/${getBackground.value}.png`);
       context.drawImage(background, 0, 0, canvas.width, canvas.height);
     }
 
@@ -89,7 +89,7 @@ module.exports = {
     context.fill();
 
     // Name
-    Canvas.GlobalFonts.registerFromPath(join(__dirname, '..', 'fonts', 'Rubik-VariableFont_wght.ttf'), 'rubik-font');
+    Canvas.GlobalFonts.registerFromPath(join(__dirname, '..', 'public', 'fonts', 'Rubik-VariableFont_wght.ttf'), 'rubik-font');
     context.font = '25px rubik-font';
     context.fillStyle = '#ffffff';
     context.textAlign = 'left';
