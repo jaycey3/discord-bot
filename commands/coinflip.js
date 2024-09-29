@@ -68,7 +68,7 @@ module.exports = {
 
             const resultEmbed = new EmbedBuilder()
             .setAuthor({ name: 'Coin Flip', iconURL: interaction.user.avatarURL({ dynamic: true })})
-            .setColor('#2C2F33')
+            .setColor(outcome === 'red' ? '#dd2e44' : '#55acee')
             .setTitle(`The coin landed on`)
             .setDescription(outcome === 'red' ? '**🔴 RED**' : '**🔵 BLUE**')
             .setFooter({ text: `Placed bets: ${betTxt} 🪙 | Choice: ${decision.customId === 'red' ? '🔴 RED' : '🔵 BLUE'}`})
