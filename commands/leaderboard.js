@@ -43,7 +43,8 @@ module.exports = {
       let position = 1;
       if (users.length > 0) {
         for (let user of users) {
-          let displayName = client.users.cache.get(user.user_id).displayName;
+          let userObject = client.users.cache.get(user.user_id);
+          let displayName = userObject ? userObject.displayName || userObject.username : `User ${user.user_id}`;
 
           if (user.balance == 0) {
             break;
@@ -71,7 +72,8 @@ module.exports = {
       let position = 1;
       if (users.length > 0) {
         for (let user of users) {
-          let displayName = client.users.cache.get(user.user_id).displayName;
+          let userObject = client.users.cache.get(user.user_id);
+          let displayName = userObject ? userObject.displayName || userObject.username : `User ${user.user_id}`;
           let xp = user.xp;
 
           if (xp == 0) {

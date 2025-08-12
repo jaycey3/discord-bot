@@ -21,13 +21,14 @@ const client = new Client({
 });
 
 // Database Connection
-const { host, user, password, database } = require('./config.json');
+const { host, port, user, password, database } = require('./config.json');
 const mysql = require('mysql2/promise');
 
 async function connectToDatabase() {
   try {
     const connection = await mysql.createConnection({
       host: host,
+      port: port,
       user: user,
       password: password,
       database: database
